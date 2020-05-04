@@ -1,0 +1,203 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>php的AOP编程实例 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>php的AOP编程实例</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents></nav></div></div><div class="content post__content clearfix"><p>最近研究下php下面的<a href=http://baike.baidu.com/view/73626.htm>AOP</a>实现，在网上也看到不少的文章，老王在他的手册里<a href=http://hi.baidu.com/thinkinginlamp/blog/item/864a0ef46d93b86eddc474f3.html>利用魔术方法实现准AOP</a> 这个方法很好。</p><p>下面是实例代码</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-php data-lang=php>
+//应用程序中某个业务逻辑类
+
+class BIZ
+
+{
+
+public function foobar(){
+
+echo &#39;业务逻辑&lt;<span style=color:#f92672>br</span> /&gt;&#39;;
+
+}
+
+}
+
+//业务逻辑类的包装类
+
+class AOP
+
+{
+
+private $instance;
+
+public function __construct($instance){
+
+$this-&gt;instance = $instance;
+
+}
+
+public function __call($method, $argument){
+
+if(! method_exists($this-&gt;instance, $method)){
+
+throw new Exception(&#39;未定义的方法：&#39; . $method);
+
+}
+
+echo &#39;权限检查&lt;<span style=color:#f92672>br</span> /&gt;&#39;;
+
+$callBack = array($this-&gt;instance, $method);
+
+$return = call_user_func_array($callBack, $argument);
+
+echo &#39;日志记录&lt;<span style=color:#f92672>br</span> /&gt;&#39;;
+
+return $return;
+
+}
+
+}
+
+//工厂方法
+
+class Factory
+
+{
+
+public function getBizInstance(){
+
+return new AOP(new BIZ());
+
+}
+
+}
+
+//客户端调用演示
+
+header(&#34;Content-Type: text/html; charset=utf8&#34;);
+
+try
+
+{
+
+$obj = Factory::getBizInstance();
+
+$obj-&gt;foobar();
+
+}
+
+catch(Exception $e)
+
+{
+
+echo &#39;Caught exception: &#39;, $e-&gt;getMessage();
+
+}
+
+</code></pre></div><p>当然，很优雅的利用php5内置的魔术方法__call来实现AOP，唯一的缺点是要在AOP类里面实例客户端对象，返回的是被AOP包装后的对象,这样在get_class会有一些麻烦!</p><p>在看<a href=http://book.douban.com/subject/4196842/>PHP实战</a>的时候发现可以不用在AOP类里面实例客户端对象，但是需要继承一个父类。</p><p>部分代码如下，对书上的例子稍作修改。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-php data-lang=php>
+//要记录方法调用的父类
+
+class loggingClass{
+
+function __call($method,$args){
+
+if(strchr($method,&#39;Aop_&#39;)){
+
+$method = str_replace(&#39;Aop_&#39;,&#34;,$method);
+
+if(!method_exists($this,$method)){
+
+throw new Exception(&#34;Call undefinded method &#34;.get_class($this).&#34;::$method&#34;);
+
+}
+
+$log = Log::getInstance();
+
+$log-&gt;log(&#34;调用方法&#34;.$method.&#34;之前做点啥&#34;);
+
+$return = call_user_func_array(array($this,$method),$args);
+
+$log-&gt;log(&#34;调用方法&#34;.$method.&#34;后再做点啥&#34;);
+
+return $return;
+
+}
+
+}
+
+}
+
+</code></pre></div><pre><code>利用父类的魔术方法__call实现记录日志操作，当从客户端调用不存在的方法，__call会拦截它，然后就开始记录日志，调用真正的方法，然后日志记录结束。在这个例子中，我修改对方法的判断，只有调用以Aop_为前缀的方法时才会调用__call方法。
+</code></pre><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-php data-lang=php>
+//具体的日志记录类
+
+class Log{
+
+private static $log;
+
+function __construct(){
+
+}
+
+static function getInstance(){
+
+if(self::$log == null){
+
+self::$log = new Log();
+
+}
+
+return self::$log;
+
+}
+
+function log($str){
+
+echo $str.&#39;&lt;<span style=color:#f92672>br</span>/&gt;&#39;;
+
+}
+
+}
+
+</code></pre></div><p>实现一个具体的日志类的单一实例的方法</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-php data-lang=php>
+//带有可记录日子方法的Date类
+
+class Date extends loggingClass{
+
+private $timestamp;
+
+function __construct($timestamp = false){
+
+$this-&gt;setinit($timestamp);
+
+}
+
+protected function setinit($timestamp){
+
+$this-&gt;timestamp = $timestamp?$timestamp:time();
+
+}
+
+protected function setTime(){
+
+echo &#39;业务逻辑&lt;<span style=color:#f92672>br</span>/&gt;&#39;;
+
+}
+
+}
+
+$date = new Date();
+
+$date-&gt;Aop_setTime();
+
+</code></pre></div><p>具体的业务逻辑类，需要继承loggingClass类，然后就可以开始调用，在这个例子中，客户端是不能调用该类中的setTime方法，因为是protected属性，可修改为public这样客户端进行实例就能调用了。如果有的同学对这样实现起来不是很满意的话，这里有牛人用.net的思想实现的AOP，扩展性很强，当然代码也很多，请看</p><p><a href=http://www.cnblogs.com/afritxia2008/archive/2010/06/27/1766026.html>PHP三层结构(上)——简单三层结构</a></p><p><a href=http://www.cnblogs.com/afritxia2008/archive/2010/07/03/1770427.html>PHP三层结构(下)——PHP实现AOP</a></p></div><footer class=post__footer><div class="post__tags tags clearfix"><svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5.0 11V3C0 1.5.8.8.8.8S1.5.0 3 0h8c1.5.0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 100-6 3 3 0 000 6z"/></svg><ul class=tags__list><li class=tags__item><a class="tags__link btn" href=/tags/php/ rel=tag>PHP</a></li><li class=tags__item><a class="tags__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ rel=tag>后端</a></li></ul></div></footer></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

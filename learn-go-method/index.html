@@ -1,0 +1,268 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>方法-学习Go语言 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>方法-学习Go语言</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><ul><li><a href=#阅读笔记>阅读笔记</a></li><li><a href=#参考链接>参考链接</a></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><h3 id=阅读笔记>阅读笔记</h3><h4 id=methodsgo>methods.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func (v Vertex) Abs() float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+    v := Vertex{3, 4}
+    fmt.Println(v.Abs())
+}
+</code></pre><h4 id=笔记>笔记</h4><pre><code>Go 没有类。不过你可以为结构体类型定义方法。
+
+方法就是一类带特殊的 **接收者** 参数的函数。
+
+方法接收者在它自己的参数列表内，位于 `func` 关键字和方法名之间。
+
+在此例中，`Abs` 方法拥有一个名为 `v`，类型为 `Vertex` 的接收者。
+
+1. 这不是面向对象的类的方法吗？是否根据函数名的大小写来区分权限public 和private？
+</code></pre><h4 id=methods-funcsgo>methods-funcs.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func Abs(v Vertex) float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+    v := Vertex{3, 4}
+    fmt.Println(Abs(v))
+}
+</code></pre><h4 id=笔记-1>笔记</h4><p>记住：方法只是个带接收者参数的函数。</p><h4 id=methods-continuedgo>methods-continued.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type MyFloat float64
+
+func (f MyFloat) Abs() float64 {
+    if f &lt; 0 {
+        return float64(-f)
+    }
+    return float64(f)
+}
+
+func main() {
+    f := MyFloat(-math.Sqrt2)
+    fmt.Println(f.Abs())
+}
+</code></pre><h4 id=笔记-2>笔记</h4><p>你也可以为非结构体类型声明方法。</p><p>在此例中，我们看到了一个带 <code>Abs</code> 方法的数值类型 <code>MyFloat</code>。</p><p>你只能为在同一包内定义的类型的接收者声明方法，而不能为其它包内定义的类型（包括 <code>int</code> 之类的内建类型）的接收者声明方法。</p><p>（译注：就是接收者的类型定义和方法声明必须在同一包内；不能为内建类型声明方法。）</p><ol><li>MyFloat内部实现还是结构体吧，只是定义一个新的结构体别名</li><li>再为这个结构体添加新的方法。</li></ol><h4 id=methods-pointersgo>methods-pointers.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func (v Vertex) Abs() float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func (v *Vertex) Scale(f float64) {
+    v.X = v.X * f
+    v.Y = v.Y * f
+}
+
+func main() {
+    v := Vertex{3, 4}
+    v.Scale(10)
+    fmt.Println(v.Abs())
+}
+</code></pre><h4 id=笔记-3>笔记</h4><pre><code>你可以为指针接收者声明方法。
+
+这意味着对于某类型 `T`，接收者的类型可以用 `*T` 的文法。（此外，`T`不能是像 `*int` 这样的指针。）
+
+例如，这里为 `*Vertex` 定义了 `Scale` 方法。
+
+指针接收者的方法可以修改接收者指向的值（就像 `Scale` 在这做的）。由于方法经常需要修改它的接收者，指针接收者比值接收者更常用。
+
+试着移除第 16 行 `Scale` 函数声明中的 `*`，观察此程序的行为如何变化。
+
+若使用值接收者，那么 `Scale` 方法会对原始 `Vertex` 值的副本进行操作。（对于函数的其它参数也是如此。）`Scale` 方法必须用指针接受者来更改 `main` 函数中声明的 `Vertex` 的值。
+</code></pre><ol><li>什么是指针接受者？什么是值接受者？</li><li>这里有点类似原型模式了。在JavaScript可以为一个方法（对象）添加原型方法，后续大家都可以调用该方法。</li><li>在这里的函数Scale参数是指针的，修改其值会传导原始的值。</li></ol><h4 id=methods-pointers-explainedgo>methods-pointers-explained.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func Abs(v Vertex) float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func Scale(v Vertex, f float64) {
+    v.X = v.X * f
+    v.Y = v.Y * f
+}
+
+func main() {
+    v := Vertex{3, 4}
+    Scale(v, 10)
+    fmt.Println(Abs(v))
+}
+</code></pre><h4 id=笔记-4>笔记</h4><ol><li><code>v *Vertex -> v Vertex</code></li><li><code>去掉参数里的*,参数就从指针传递变成值传递，这就意味着是否可以改变原始值</code></li><li>第2行函数，只是改变了副本的值，并没有改变原始值。</li></ol><h4 id=indirectiongo>indirection.go</h4><pre><code>package main
+
+import &quot;fmt&quot;
+
+type Vertex struct {
+    X, Y float64
+}
+
+func (v *Vertex) Scale(f float64) {
+    v.X = v.X * f
+    v.Y = v.Y * f
+}
+
+func ScaleFunc(v *Vertex, f float64) {
+    v.X = v.X * f
+    v.Y = v.Y * f
+}
+
+func main() {
+    v := Vertex{3, 4}
+    v.Scale(2)
+    ScaleFunc(&amp;v, 10)
+
+    p := &amp;Vertex{4, 3}
+    p.Scale(3)
+    ScaleFunc(p, 8)
+
+    fmt.Println(v, p)
+}
+</code></pre><h4 id=笔记-5>笔记</h4><pre><code>比较前两个程序，你大概会注意到带指针参数的函数必须接受一个指针：
+
+var v Vertex
+ScaleFunc(v, 5)  // 编译错误！
+ScaleFunc(&amp;v, 5) // OK
+而以指针为接收者的方法被调用时，接收者既能为值又能为指针：
+
+var v Vertex
+v.Scale(5)  // OK
+p := &amp;v
+p.Scale(10) // OK
+对于语句 v.Scale(5)，即便 v 是个值而非指针，带指针接收者的方法也能被直接调用。 也就是说，由于 Scale 方法有一个指针接收者，为方便起见，Go 会将语句 v.Scale(5) 解释为 (&amp;v).Scale(5)。
+</code></pre><ol><li>感觉这里有坑，go语言自动帮你做了转换。</li><li>如果调用的方法里有一个指针的参数，go自动会取到值的引用当作函数的参数，去调用对应的函数。</li><li>第一个例子，先将值变大了2倍，然后扩大了10倍。</li><li>第二个例子，扩大了3倍。p是一个指针，可以直接传递到函数内部。</li></ol><h4 id=indirection-valuesgo>indirection-values.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func (v Vertex) Abs() float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func AbsFunc(v Vertex) float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+    v := Vertex{3, 4}
+    fmt.Println(v.Abs())
+    fmt.Println(AbsFunc(v))
+
+    p := &amp;Vertex{4, 3}
+    fmt.Println(p.Abs())
+    fmt.Println(AbsFunc(*p))
+}
+</code></pre><h4 id=笔记-6>笔记</h4><pre><code>同样的事情也发生在相反的方向。
+
+接受一个值作为参数的函数必须接受一个指定类型的值：
+
+var v Vertex
+fmt.Println(AbsFunc(v))  // OK
+fmt.Println(AbsFunc(&amp;v)) // 编译错误！
+而以值为接收者的方法被调用时，接收者既能为值又能为指针：
+
+var v Vertex
+fmt.Println(v.Abs()) // OK
+p := &amp;v
+fmt.Println(p.Abs()) // OK
+这种情况下，方法调用 p.Abs() 会被解释为 (*p).Abs()。
+
+思考
+1. 什么是同样的事情？
+2. 第二个例子里面，p是一个指向Vertex的指针,go自动会将p解释为(*p)。
+</code></pre><h4 id=methods-with-pointer-receiversgo>methods-with-pointer-receivers.go</h4><pre><code>package main
+
+import (
+    &quot;fmt&quot;
+    &quot;math&quot;
+)
+
+type Vertex struct {
+    X, Y float64
+}
+
+func (v *Vertex) Scale(f float64) {
+    v.X = v.X * f
+    v.Y = v.Y * f
+}
+
+func (v *Vertex) Abs() float64 {
+    return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func main() {
+    v := &amp;Vertex{3, 4}
+    fmt.Printf(&quot;Before scaling: %+v, Abs: %v\n&quot;, v, v.Abs())
+    v.Scale(5)
+    fmt.Printf(&quot;After scaling: %+v, Abs: %v\n&quot;, v, v.Abs())
+}
+</code></pre><h4 id=笔记-7>笔记</h4><pre><code>使用指针接收者的原因有二：
+
+首先，方法能够修改其接收者指向的值。
+
+其次，这样可以避免在每次调用方法时复制该值。若值的类型为大型结构体时，这样做会更加高效。
+
+在本例中，Scale 和 Abs 接收者的类型为 *Vertex，即便 Abs 并不需要修改其接收者。
+</code></pre><ol><li>传值和传引用，根据使用情况不同的case进行选择。</li><li>在这个例子中Scale 和Abs都变成结构体的方法，并传递了引用，所以参数值会被改变，并一直传递下去。</li></ol><h3 id=参考链接>参考链接</h3><ol><li><a href=https://tour.go-zh.org/methods/1>方法</a></li><li><a href=https://tour.go-zh.org/methods/2>方法即函数</a></li><li><a href=https://tour.go-zh.org/methods/3>方法续</a></li><li><a href=https://tour.go-zh.org/methods/4>指针接收者</a></li><li><a href=https://tour.go-zh.org/methods/5>指针与函数</a></li><li><a href=https://tour.go-zh.org/methods/6>方法与指针重定向</a></li><li><a href=https://tour.go-zh.org/methods/7>方法与指针重定向（续）</a></li><li><a href=https://tour.go-zh.org/methods/8>选择值或指针作为接收者</a></li></ol><p><img src=/wp-content/uploads/20181209.01.p1.png alt=img></p></div><footer class=post__footer><div class="post__tags tags clearfix"><svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5.0 11V3C0 1.5.8.8.8.8S1.5.0 3 0h8c1.5.0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 100-6 3 3 0 000 6z"/></svg><ul class=tags__list><li class=tags__item><a class="tags__link btn" href=/tags/go/ rel=tag>Go</a></li><li class=tags__item><a class="tags__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ rel=tag>后端</a></li></ul></div></footer></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

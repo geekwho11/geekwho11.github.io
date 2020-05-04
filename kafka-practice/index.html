@@ -1,0 +1,77 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Kafka实践 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Kafka实践</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><ul><li><a href=#前言>前言</a></li><li><a href=#zookeeper>Zookeeper</a></li><li><a href=#消息消费>消息消费</a></li><li><a href=#消息ack>消息ACK</a></li><li><a href=#如何搭建kafka服务>如何搭建Kafka服务</a></li><li><a href=#参考链接>参考链接</a></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><h3 id=前言>前言</h3><p>在上一篇文章，我们介绍的Kafka的基本概念和原理。我们尝试搭建一个Kafka的集群，并尝试生产和消费消息。在消费消息时，需要注意PHP的扩展rdkafka的消费接口不同以及消息ACK的机制。在Kafka集群中，有一个很重要的组件是zookeeper，下面我们会了解下什么是Zookeeper。</p><h3 id=zookeeper>Zookeeper</h3><p>Zookeeper是Apache的顶级项目，作为一个中心服务，用于维护命名和配置数据，并在分布式系统中提供灵活和健壮的数据同步。Zookeeper跟踪Kafka集群节点的状态、主题、分区等信息。Zookeeper允许多个客户端同时进行读写操作，并充当系统内的共享配置服务。</p><p>那Zeekeeper是如何工作的呢？Zookeeper将数据划分到多个节点集合中，这就是它实现高可用性和一致性的方法。如果有一个节点失败，Zookeeper可以执行即时故障转移，例如，如果主节点出现失败，则通过集合内的轮询实时选择一个新节点。如果第一个节点无法响应，连接服务器的客户端可以查询另外一个节点。</p><p>为什么Zookeeper对Apache Kafka来说是必须的？</p><p>在Kafka里，Zookeeper扮演着很重要的角色。有如下几个功能：</p><ol><li>控制选举。控制者是Kafka生态中最重要的代理实体之一，负责维护所有分区之间的领导者与跟随者的关系。如果领导者节点挂掉，控制者负责在所有分区选举出新的领导者。</li><li>主题配置。保存着所有的主题配置，列表，分区数量，所有的副本位置，所有主题的配置，节点的首选领导等。</li><li>访问控制列表。Zookeeper维护着所有主题的访问控制列表。</li><li>集群的成员。Zeekeeper还维护着实时正在运行的所有代理列表。</li></ol><h3 id=消息消费>消息消费</h3><p>在PHP的扩展中，rdkafka实现了两种消费接口，High-level Consumer和Low-level Consumer。</p><table><thead><tr><th align=left>接口</th><th align=left>实现</th><th align=left>备注</th></tr></thead><tbody><tr><td align=left>High-level Consumer</td><td align=left>自动分区分配和撤销，自动管理offset</td><td align=left></td></tr><tr><td align=left>Low-level Consumer</td><td align=left>手动维护分区，offset</td><td align=left></td></tr></tbody></table><h3 id=消息ack>消息ACK</h3><p>Kafka消息可能会丢失的情况，可能会出现在消息发送和消息消费。Kafka通过配置request.required.acks属性是否进行消息确认。</p><table><thead><tr><th align=left>配置</th><th align=left>性能</th><th align=left>内部实现</th><th align=left>备注</th></tr></thead><tbody><tr><td align=left>0</td><td align=left>高</td><td align=left>不进行消息接受是否成功的确认</td><td align=left></td></tr><tr><td align=left>1</td><td align=left>中</td><td align=left>当Leader接受成功才确认</td><td align=left></td></tr><tr><td align=left>-1</td><td align=left>低</td><td align=left>当Leader和Follower都接受成功才确认</td><td align=left></td></tr></tbody></table><p>Kafka通过配置producer.type属性来决定消息的同步或异步发送。</p><p>综上，可能会有两种场景会丢失消息：</p><ol><li>acks = 0，不进行消息接受确认，网络异常、磁盘异常等会导致消息丢失。</li><li>acks = 1，同步模式下，只有Leader确认接受成功但Leader由于异常挂掉了，副本同步失败，可能会造成消息丢失。</li></ol><h3 id=如何搭建kafka服务>如何搭建Kafka服务</h3><p>从Github上下载Kafka的Dockerfile</p><pre><code>cd dev
+git clone git@github.com:wurstmeister/kafka-docker.git
+</code></pre><p>获取当前Ubuntu服务器的ip地址</p><pre><code>ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'|grep -v '172*'| tail -1
+192.168.1.3
+</code></pre><p>替换版本库中的KAFKA_ADVERTISED_HOST_NAME</p><pre><code>cd kafka-docker
+sed -i 's/192.168.99.100/192.168.1.3/g' docker-compose.yml
+</code></pre><p>启动整个集群</p><pre><code>docker-compose up -d
+Creating kafkadocker_kafka_1 ...
+Creating kafkadocker_zookeeper_1 ...
+Creating kafkadocker_kafka_1
+Creating kafkadocker_kafka_1 ... done
+</code></pre><p>经过漫长的等待，执行完成，可以看到启动了2个docker服务，分别以kafkadocker_kafka和wurstmeister/zookeeper为镜像。</p><pre><code>docker ps
+
+kafkadocker_kafka        &quot;start-kafka.sh&quot;       0.0.0.0:32768-&gt;9092/tcp kafkadocker_kafka_1
+wurstmeister/zookeeper   &quot;/bin/sh -c '/usr/sb…&quot;   22/tcp, 2888/tcp, 3888/tcp, 0.0.0.0:2181-&gt;2181/tcp   kafkadocker_zookeeper_1
+</code></pre><p>查看kafka的信息</p><pre><code>./start-kafka-shell.sh 192.168.1.3  192.168.1.3:2181
+# 进入docker环境后有4个脚本
+bash-4.4# ls /usr/bin/ | grep '\.sh'
+broker-list.sh 查看代理列表
+create-topics.sh 创建主题
+start-kafka.sh 启动kafka
+versions.sh 显示版本
+</code></pre><p>创建topics test</p><pre><code># 查看topics
+kafka-topics.sh --list --zookeeper $ZK
+# 创建一个topics test
+kafka-topics.sh --create --topic test \
+--partitions 4 --zookeeper $ZK --replication-factor 1
+bash-4.4# kafka-topics.sh --list --zookeeper $ZK
+test
+# 显示topic test的相关信息
+kafka-topics.sh --describe --topic test --zookeeper $ZK
+Topic:test  PartitionCount:4    ReplicationFactor:1 Configs:
+    Topic: test Partition: 0    Leader: 1001    Replicas: 1001  Isr: 1001
+    Topic: test Partition: 1    Leader: 1001    Replicas: 1001  Isr: 1001
+    Topic: test Partition: 2    Leader: 1001    Replicas: 1001  Isr: 1001
+    Topic: test Partition: 3    Leader: 1001    Replicas: 1001  Isr: 1001
+</code></pre><p>生产消息</p><pre><code>kafka-console-producer.sh --topic=test --broker-list=`broker-list.sh`
+# 输入msg后回车即可
+</code></pre><p>消费消息</p><pre><code># 启动另外一个终端进行消费
+./start-kafka-shell.sh 192.168.1.3  192.168.1.3:2181
+# 进入docker 后在命令行输入
+kafka-console-consumer.sh --topic=test --bootstrap-server `broker-list.sh`
+# 收到消息后在直接显示出来
+</code></pre><p>查看zookeeper信息</p><pre><code># 进入zookeeper shell
+zookeeper-shell.sh $ZK
+# 可查看相关帮助文档
+help
+# 查看topics
+ls /brokers/topics
+</code></pre><h4 id=遇到的问题>遇到的问题</h4><p>创建topics失败</p><pre><code>kafka-topics.sh --create --topic test --partitions 4 --zookeeper $ZK --replication-factor 2
+Error while executing topic command : Replication factor: 2 larger than available brokers: 1.
+[2019-02-23 12:45:42,619] ERROR org.apache.kafka.common.errors.InvalidReplicationFactorException: Replication factor: 2 larger than available brokers: 1.
+ (kafka.admin.TopicCommand$)
+</code></pre><p>出现这个错误，提示brokers的数量较少，replication-factor 复制因子过大，如果只有一个broker，改为1即可。</p><p>消费失败</p><pre><code>kafka-console-consumer.sh --topic=test --zookeeper=$ZK
+# 出现报错
+zookeeper is not a recognized option
+</code></pre><p>最新版本的consumer去掉了这个选项，添加额外的选项即可。</p><pre><code>kafka-console-consumer.sh --topic=test --bootstrap-server `broker-list.sh`
+</code></pre><h3 id=参考链接>参考链接</h3><ol><li><a href=https://github.com/wurstmeister/kafka-docker>Dockerfile for Apache Kafka</a></li><li><a href=http://wurstmeister.github.io/kafka-docker/>Run multiple Kafka brokers in Docker</a></li><li><a href=https://arnaud-lb.github.io/php-rdkafka/phpdoc/book.rdkafka.html>Rdkafka doc</a></li><li><a href=https://www.cloudkarafka.com/blog/2018-07-04-cloudkarafka_what_is_zookeeper.html>What is Zookeeper and why is it needed for Apache Kafka?</a></li><li><a href=http://www.importnew.com/24973.html>kafka 数据可靠性深度解读</a></li><li><a href=http://www.jasongj.com/2015/04/24/KafkaColumn2/>Kafka High Availability</a></li></ol><p><img src=http://xbc.me/wp-content/uploads/20190403.p1.png alt=img></p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

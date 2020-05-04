@@ -1,0 +1,116 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Ubuntu常用配置指南 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Ubuntu常用配置指南</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><ul><li><a href=#前言>前言</a></li><li><a href=#系统安装>系统安装</a></li><li><a href=#常用配置>常用配置</a></li><li><a href=#总结>总结</a></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><h3 id=前言>前言</h3><p>Ubuntu是我非常喜欢的一款开源操作系统。自从在大学学习安装Ubuntu 8.04后，从此一发不可收拾，喜欢上了这个有着朋友圈图标的Linux发行版。工作多年，几乎都是在Linux/Unix 环境下工作。每次到了一个新环境都会遇到安装新系统的需求，基本上会把工作的电脑换成自己喜欢的Ubuntu系统。写这篇文章是为了记录自己经常会用到的配置。</p><h3 id=系统安装>系统安装</h3><p>Ubuntu发行版每半年会发布一个新的版本，并且会为了系统取一个名字，大多数以动物的名称为代号。比如最新的18.04 长期支持版本的代号是Beaver，河狸是一种啮齿动物。你可以从官网下载到最新的镜像。建议安装选择Long Term Support的版本，比如18.04，有5年的支持周期，足够满足你的日常工作需求。下面是我的日常开发常用的配置。</p><h3 id=常用配置>常用配置</h3><h4 id=ssh>SSH</h4><p>工作中经常会有登录跳板机的需求。但每次都需要输入密码的话，使用起来，不是很方便。我们需要想要一些办法来自动化这个过程。我们期望的是，只需要输入一次密码，后续直接登录，不用每次都需要输入密码。</p><p>下面通过ssh的config配置，自定义主机登录实现这个操作。</p><pre><code>cat ~/.ssh/config
+host m
+    User matt
+    Hostname ssh.domain.com
+    Port 22
+    ControlMaster auto
+    ControlPath /tmp/%r@%h:%p
+    ServerAliveInterval 30
+    ServerAliveCountMax 60
+</code></pre><p>这段配置通过ControlMaster来开启共享Session，主要应用在复用同一个网络连接的socket，而不需要每次建立新的连接。ControlPath为socket的唯一路径标识，尽量保持每一个主机是唯一的，这里我们是以%r 远程登录用户名+%h 远程主机名+%p 远程主机端口 保持唯一的。</p><p>实际应用场景是这样子的：开发或者运维通过跳板机或者堡垒机，作为跳板登录目标机器，执行相关的操作。每次跳板机都是重新输入密码的，并且通常情况下都是不支持ssh key登录的。采用上面方式，只需要第一次登录后，后续新建终端登录跳板机是不需要再次输入密码的。</p><p>那么正确的使用方式如下：</p><ol><li>首先打开你的终端，新建2个标签页面</li><li>在第一个标签页面,输入ssh m</li><li>第一次会要求你输入密码，输入正确的密码登录。</li><li>然后在第二个标签页面，直接ssh m,这时候你就不需要输入密码了。</li><li>这样就达到了免输入密码的操作。</li></ol><h4 id=git>Git</h4><p>设置常用的git配置，当前使用的用户以及常用命令别名等。</p><pre><code>#配置用户名和邮箱
+git config --global user.name &quot;username&quot;
+git config --global user.email &quot;email&quot;
+
+git config --global core.editor &quot;vim&quot;
+git config --global core.filemode false
+git config --global core.quotepath false
+git config --global color.ui true
+
+git config --global gui.spellingdictionary none
+
+#alias 创建命令别名
+git config --global alias.co checkout
+git config --global alias.ci commit
+git config --global alias.cp cherry-pick
+git config --global alias.st status
+git config --global alias.br branch
+git config --global alias.r rebase
+git config --global alias.ri rebase -i
+git config --global alias.l '!git --no-pager log --graph --pretty=format:&quot;%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)&lt;%an&gt;%Creset&quot; --abbrev-commit --date=relative'
+git config --global alias.lg 'log --graph --pretty=format:&quot;%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)&lt;%an&gt;%Creset&quot; --abbrev-commit --date=relative'
+</code></pre><p>我觉得几个比较重要配置 ：</p><p>core.editor vim</p><p>命令行经常使用的编辑器是vim</p><p>core.filemode false</p><p>不记录文件的属性变更</p><p>core.quotepath false</p><p>对中文名的文件或路径不进行转义</p><p>color.ui true</p><p>对git diff 进行颜色显示</p><p>gui.spellingdictionary none</p><p>不对提交进行拼写检查，主要用于解决Git GUI的错误提示”Spell checking is unavable”。</p><p>另外对一些常用的命令进行别名，这样就可以少输入几个字符了。</p><h4 id=sublime-text>Sublime Text</h4><p>我最喜欢的编辑器是Sublime Text 3，下面是我的日常工作设置：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>{
+  <span style=color:#f92672>&#34;default_line_ending&#34;</span>: <span style=color:#e6db74>&#34;unix&#34;</span>,
+  <span style=color:#f92672>&#34;draw_white_space&#34;</span>: <span style=color:#e6db74>&#34;all&#34;</span>,
+  <span style=color:#f92672>&#34;ensure_newline_at_eof_on_save&#34;</span>: <span style=color:#66d9ef>true</span>,
+  <span style=color:#f92672>&#34;font_face&#34;</span>: <span style=color:#e6db74>&#34;Ubuntu Mono&#34;</span>,
+  <span style=color:#f92672>&#34;font_size&#34;</span>: <span style=color:#ae81ff>14</span>,
+  <span style=color:#f92672>&#34;rulers&#34;</span>:[<span style=color:#ae81ff>80</span>],
+  <span style=color:#f92672>&#34;show_encoding&#34;</span>: <span style=color:#66d9ef>true</span>,
+  <span style=color:#f92672>&#34;show_line_endings&#34;</span>: <span style=color:#66d9ef>true</span>,
+  <span style=color:#f92672>&#34;translate_tabs_to_spaces&#34;</span>: <span style=color:#66d9ef>true</span>,
+  <span style=color:#f92672>&#34;trim_trailing_white_space_on_save&#34;</span>: <span style=color:#66d9ef>true</span>,
+  <span style=color:#f92672>&#34;word_wrap&#34;</span>: <span style=color:#66d9ef>true</span>
+}
+</code></pre></div><p>编辑器是日常工作用得最多的工具。</p><p>default_line_ending unix</p><p>设置默认为unix的回车符LF only。</p><p>draw_white_space all</p><p>显示所有不可见的字符</p><p>ensure_newline_at_eof_on_save true</p><p>保证每一个文件最后一行有一个空行</p><p>show_encoding true</p><p>显示文件的编码</p><p>translate_tabs_to_spaces true</p><p>转换tab键为空格</p><p>trim_trailing_white_space_on_save true</p><p>保存时删除行尾的空格</p><p>word_wrap true</p><p>自动换行</p><h4 id=常用软件安装>常用软件安装</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e>#!/bin/bash
+</span><span style=color:#75715e></span><span style=color:#75715e># Program:</span>
+<span style=color:#75715e>#   从0开始，一键安装常用开发软件</span>
+<span style=color:#75715e># History:</span>
+<span style=color:#75715e># 2019-05-27 geekwho First release.</span>
+sudo apt install build-essential
+
+sudo apt install curl zsh
+
+sudo apt install vim
+
+sudo apt install git
+sudo apt install gitk
+sudo apt install git-gui
+sudo apt install git-svn
+
+<span style=color:#75715e># svn</span>
+sudo apt install subversion
+
+<span style=color:#75715e># php</span>
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+sudo apt update
+sudo apt install php
+sudo apt install php-xml
+sudo apt install php-mbstring
+sudo apt install php-xdebug
+sudo apt install php-curl
+
+<span style=color:#75715e># php-cs-fixer</span>
+curl -L https://cs.symfony.com/download/php-cs-fixer-v2.phar -o php-cs-fixer
+sudo chmod a+x php-cs-fixer
+sudo mv php-cs-fixer /usr/local/bin/php-cs-fixer
+
+<span style=color:#75715e># composer</span>
+wget https://raw.githubusercontent.com/composer/getcomposer.org/76a7060ccb93902cd7576b67264ad91c8a2700e2/web/installer -O - -q | php -- --quiet
+sudo mv composer.phar /usr/local/bin/composer
+sudo chmod +x /usr/local/bin/composer
+
+sudo apt install gnome-tweak-tool
+
+<span style=color:#75715e>#typora</span>
+wget -qO - https://typora.io/linux/public-key.asc | sudo apt-key add -
+sudo add-apt-repository <span style=color:#e6db74>&#39;deb https://typora.io/linux ./&#39;</span>
+sudo apt-get update
+sudo apt-get install typora
+
+<span style=color:#75715e>#sublime text</span>
+wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
+sudo apt-get install apt-transport-https
+echo <span style=color:#e6db74>&#34;deb https://download.sublimetext.com/ apt/stable/&#34;</span> | sudo tee /etc/apt/sources.list.d/sublime-text.list
+sudo apt-get update
+sudo apt install sublime-text
+</code></pre></div><h3 id=总结>总结</h3><p>每次配置新的开发环境，通常是耗时较长的步骤。为此，我将日常开发的常用配置建立了一个单独版本库进行记录，避免自己下一次用到时花费更多时间去查找相关的信息。另外一方面，我把常用的软件安装SHELL命令，优化为一键安装的脚本，方便下次直接运行。这样，下次如果初始化环境的话，会帮助我节约部分时间，不过，有可能这个脚本很久都不会用到了，但提前做些准备总是好的。所谓，万事都是可以提前准备的。</p><p><img src=https://xbc.me/wp-content/uploads/20190615.p1.ubuntu.png alt=Ubuntu常用配置指南></p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

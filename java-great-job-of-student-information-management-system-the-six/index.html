@@ -1,0 +1,197 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Java 大作业之学生信息管理系统—The Six - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Java 大作业之学生信息管理系统—The Six</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents></nav></div></div><div class="content post__content clearfix"><p>再来一个</p><p>点击添加按钮即可进行添加 主要由addframe.java实现</p><p>如图</p><p><a href=https://xbc.me/wp-content/uploads/java-six.jpg><img src=https://xbc.me/wp-content/plugins/images-lazyload-and-slideshow/blank_1x1.gif alt="Java 大作业之学生信息管理系统—The Six"></a>Java 大作业之学生信息管理系统—The Six</p><p>源代码如下：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>///主运行类
+</span><span style=color:#75715e>/// main指主框架
+</span><span style=color:#75715e>/// setDefaultCloseOperation指让框架右上角的按钮都有效
+</span><span style=color:#75715e>/// show让框架能显示出来
+</span><span style=color:#75715e></span><span style=color:#f92672>import</span> java.awt.*<span style=color:#f92672>;</span>
+<span style=color:#f92672>import</span> java.awt.event.*<span style=color:#f92672>;</span>
+<span style=color:#f92672>import</span> java.sql.*<span style=color:#f92672>;</span>
+<span style=color:#f92672>import</span> java.util.Vector<span style=color:#f92672>;</span>
+<span style=color:#f92672>import</span> javax.swing.*<span style=color:#f92672>;</span>
+<span style=color:#75715e>///这个是学生信息系统添加信息框架类
+</span><span style=color:#75715e>///通过九个文本域将不同信息的领导分别输出在其中。
+</span><span style=color:#75715e>///通过一个添加按钮，将数据添加到数据库中。
+</span><span style=color:#75715e>///在这里的布局是通过网格组布局管理器来设定的
+</span><span style=color:#75715e>///在回送到信息界面时将学生对象ss设定为静态。放置新建对象时，其值会改变。
+</span><span style=color:#75715e></span>
+<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>addframe</span> <span style=color:#66d9ef>extends</span> JPanel
+<span style=color:#f92672>{</span>
+String stnametext<span style=color:#f92672>;</span>
+String stzhuanyetext<span style=color:#f92672>;</span>
+String stsextext<span style=color:#f92672>;</span>
+String stsushenumbertext<span style=color:#f92672>;</span>
+String stsushephonetext<span style=color:#f92672>;</span>
+String stqqtext<span style=color:#f92672>;</span>
+String stemailtext<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> JTextField stusernameinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> 1L<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> WIDTH<span style=color:#f92672>=</span>700<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> HEIGHT<span style=color:#f92672>=</span>400<span style=color:#f92672>;</span>
+
+<span style=color:#66d9ef>static</span> JFrame studentaddframe<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>Component c<span style=color:#f92672>,</span>GridBagConstraints constraints<span style=color:#f92672>,</span><span style=color:#66d9ef>int</span> x<span style=color:#f92672>,</span><span style=color:#66d9ef>int</span> y<span style=color:#f92672>,</span><span style=color:#66d9ef>int</span> w<span style=color:#f92672>,</span><span style=color:#66d9ef>int</span> h<span style=color:#f92672>)</span>
+<span style=color:#f92672>{</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>gridx</span><span style=color:#f92672>=</span>x<span style=color:#f92672>;</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>gridy</span><span style=color:#f92672>=</span>y<span style=color:#f92672>;</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>gridwidth</span><span style=color:#f92672>=</span>w<span style=color:#f92672>;</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>gridheight</span><span style=color:#f92672>=</span>h<span style=color:#f92672>;</span>
+add<span style=color:#f92672>(</span>c<span style=color:#f92672>,</span>constraints<span style=color:#f92672>);</span>
+<span style=color:#f92672>}</span>
+<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> addframe instance<span style=color:#f92672>;</span>
+
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> addframe <span style=color:#a6e22e>getInstance</span><span style=color:#f92672>()</span>
+<span style=color:#f92672>{</span>
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span> instance <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>)</span>
+<span style=color:#f92672>{</span>
+instance <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> addframe<span style=color:#f92672>();</span>
+<span style=color:#66d9ef>return</span> instance<span style=color:#f92672>;</span>
+<span style=color:#f92672>}</span>
+<span style=color:#66d9ef>else</span>
+<span style=color:#f92672>{</span>    studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setVisible</span><span style=color:#f92672>(</span><span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+<span style=color:#66d9ef>return</span> instance<span style=color:#f92672>;}</span>
+<span style=color:#f92672>}</span>
+<span style=color:#66d9ef>private</span> <span style=color:#a6e22e>addframe</span><span style=color:#f92672>()</span>
+<span style=color:#f92672>{</span>
+studentaddframe<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JFrame<span style=color:#f92672>();</span>
+
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setTitle</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;添加学生信息&#34;</span><span style=color:#f92672>);</span>
+<span style=color:#75715e>//studentaddframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+</span><span style=color:#75715e></span>studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setSize</span><span style=color:#f92672>(</span>WIDTH<span style=color:#f92672>,</span>HEIGHT<span style=color:#f92672>);</span>
+Toolkit kit<span style=color:#f92672>=</span>Toolkit<span style=color:#f92672>.</span><span style=color:#a6e22e>getDefaultToolkit</span><span style=color:#f92672>();</span>
+Dimension screenSize<span style=color:#f92672>=</span>kit<span style=color:#f92672>.</span><span style=color:#a6e22e>getScreenSize</span><span style=color:#f92672>();</span>
+<span style=color:#66d9ef>int</span> width<span style=color:#f92672>=</span>screenSize<span style=color:#f92672>.</span><span style=color:#a6e22e>width</span><span style=color:#f92672>;</span>
+<span style=color:#66d9ef>int</span> height<span style=color:#f92672>=</span>screenSize<span style=color:#f92672>.</span><span style=color:#a6e22e>height</span><span style=color:#f92672>;</span>
+<span style=color:#66d9ef>int</span> x<span style=color:#f92672>=(</span>width<span style=color:#f92672>-</span>WIDTH<span style=color:#f92672>)/</span>2<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>int</span> y<span style=color:#f92672>=(</span>height<span style=color:#f92672>-</span>HEIGHT<span style=color:#f92672>)/</span>2<span style=color:#f92672>;</span>
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setLocation</span><span style=color:#f92672>(</span>x<span style=color:#f92672>,</span>y<span style=color:#f92672>);</span>
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setVisible</span><span style=color:#f92672>(</span><span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>setResizable</span><span style=color:#f92672>(</span><span style=color:#66d9ef>false</span><span style=color:#f92672>);</span>
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span>BorderLayout<span style=color:#f92672>.</span><span style=color:#a6e22e>CENTER</span><span style=color:#f92672>);</span>
+GridBagLayout lay<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> GridBagLayout<span style=color:#f92672>();</span>
+setLayout<span style=color:#f92672>(</span>lay<span style=color:#f92672>);</span>
+
+JLabel name<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;学号&#34;</span><span style=color:#f92672>);</span>
+JLabel code<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;姓名&#34;</span><span style=color:#f92672>);</span>
+JLabel sexy<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;性别&#34;</span><span style=color:#f92672>);</span>
+JLabel birthday<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;宿舍号码&#34;</span><span style=color:#f92672>);</span>
+JLabel address<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;宿舍电话&#34;</span><span style=color:#f92672>);</span>
+JLabel age<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;专业&#34;</span><span style=color:#f92672>);</span>
+JLabel grade<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;qq号码&#34;</span><span style=color:#f92672>);</span>
+JLabel major<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;电子邮件&#34;</span><span style=color:#f92672>);</span>
+
+<span style=color:#66d9ef>final</span> JTextField stnameinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stsexinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stzhuanyeinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stsushenumberinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stsushephoneinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stqqinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+<span style=color:#66d9ef>final</span> JTextField stemailinput<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JTextField<span style=color:#f92672>(</span>10<span style=color:#f92672>);</span>
+
+JLabel title<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JLabel<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;添加学生基本信息&#34;</span><span style=color:#f92672>);</span>
+JButton additionbutton<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> JButton<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;添加&#34;</span><span style=color:#f92672>);</span>
+GridBagConstraints constraints<span style=color:#f92672>=</span><span style=color:#66d9ef>new</span> GridBagConstraints<span style=color:#f92672>();</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>fill</span><span style=color:#f92672>=</span>GridBagConstraints<span style=color:#f92672>.</span><span style=color:#a6e22e>NONE</span><span style=color:#f92672>;</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>weightx</span><span style=color:#f92672>=</span>4<span style=color:#f92672>;</span>
+constraints<span style=color:#f92672>.</span><span style=color:#a6e22e>weighty</span><span style=color:#f92672>=</span>6<span style=color:#f92672>;</span>
+
+add<span style=color:#f92672>(</span>title<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>                 <span style=color:#75715e>//使用网格组布局添加控件
+</span><span style=color:#75715e></span>add<span style=color:#f92672>(</span>name<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>code<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>sexy<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>age<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+
+add<span style=color:#f92672>(</span>stusernameinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stnameinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stsexinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stzhuanyeinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+
+add<span style=color:#f92672>(</span>birthday<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>address<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>grade<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>major<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+
+add<span style=color:#f92672>(</span>stsushenumberinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stsushephoneinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>2<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stqqinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+add<span style=color:#f92672>(</span>stemailinput<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>3<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+
+add<span style=color:#f92672>(</span>additionbutton<span style=color:#f92672>,</span>constraints<span style=color:#f92672>,</span>0<span style=color:#f92672>,</span>5<span style=color:#f92672>,</span>4<span style=color:#f92672>,</span>1<span style=color:#f92672>);</span>
+<span style=color:#75715e>///将每个文本域中的信息赋值给变量，再将变量以值的形式存储到数据库的表中
+</span><span style=color:#75715e>///最后，再将这些值存储到学生对象中，并且这个学生对象是一个静态的对象
+</span><span style=color:#75715e></span>additionbutton<span style=color:#f92672>.</span><span style=color:#a6e22e>addActionListener</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ActionListener<span style=color:#f92672>()</span>
+<span style=color:#f92672>{</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>actionPerformed</span><span style=color:#f92672>(</span>ActionEvent Event<span style=color:#f92672>)</span>
+<span style=color:#f92672>{</span>
+<span style=color:#66d9ef>try</span>
+<span style=color:#f92672>{</span>
+String stusernametext<span style=color:#f92672>=</span>stusernameinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stnametext<span style=color:#f92672>=</span>stnameinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stzhuanyetext<span style=color:#f92672>=</span>stzhuanyeinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stsextext<span style=color:#f92672>=</span>stsexinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stsushenumbertext<span style=color:#f92672>=</span>stsushenumberinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stsushephonetext<span style=color:#f92672>=</span>stsushephoneinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stqqtext<span style=color:#f92672>=</span>stqqinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+
+stemailtext<span style=color:#f92672>=</span>stemailinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>();</span>
+DBconnection con<span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> DBconnection<span style=color:#f92672>();</span>
+
+Statement st<span style=color:#f92672>=</span>con<span style=color:#f92672>.</span><span style=color:#a6e22e>getConnection</span><span style=color:#f92672>();</span>
+
+<span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>stusernameinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stnameinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stzhuanyeinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stsexinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stsushenumberinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stsushephoneinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stqqinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>&amp;&amp;</span>stemailinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>().</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()!=</span>0<span style=color:#f92672>)</span>
+<span style=color:#f92672>{</span>
+
+String qsql<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;select * from info where username=&#39;&#34;</span><span style=color:#f92672>+</span>stusernameinput<span style=color:#f92672>.</span><span style=color:#a6e22e>getText</span><span style=color:#f92672>()+</span><span style=color:#e6db74>&#34;&#39;&#34;</span><span style=color:#f92672>;</span>
+
+ResultSet rs<span style=color:#f92672>=</span> st<span style=color:#f92672>.</span><span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>(</span>qsql<span style=color:#f92672>);</span>
+
+<span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>())</span>
+<span style=color:#f92672>{</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>showMessageDialog</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>,</span><span style=color:#e6db74>&#34;学号已存在&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;友情提示&#34;</span><span style=color:#f92672>,</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>INFORMATION_MESSAGE</span><span style=color:#f92672>);}</span>
+
+<span style=color:#66d9ef>else</span>
+<span style=color:#f92672>{</span>
+String sql<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;insert into info(username,name,sex,zhuanye,sushenumber,sushephone,qq,email) values(&#39;&#34;</span><span style=color:#f92672>+</span>stusernametext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stnametext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stsextext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stzhuanyetext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stsushephonetext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stsushenumbertext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stqqtext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;,&#39;&#34;</span><span style=color:#f92672>+</span>stemailtext<span style=color:#f92672>+</span><span style=color:#e6db74>&#34;&#39;)&#34;</span><span style=color:#f92672>;</span>
+
+<span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>st<span style=color:#f92672>.</span><span style=color:#a6e22e>executeUpdate</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>)!=</span>0<span style=color:#f92672>)</span>
+<span style=color:#f92672>{</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>showMessageDialog</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>,</span><span style=color:#e6db74>&#34;插入记录成功&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;友情提示&#34;</span><span style=color:#f92672>,</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>INFORMATION_MESSAGE</span><span style=color:#f92672>);</span>
+studentaddframe<span style=color:#f92672>.</span><span style=color:#a6e22e>dispose</span><span style=color:#f92672>();</span> <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+rs<span style=color:#f92672>.</span><span style=color:#a6e22e>close</span><span style=color:#f92672>();</span>
+<span style=color:#f92672>}</span>
+<span style=color:#66d9ef>else</span>
+<span style=color:#f92672>{</span>
+JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>showMessageDialog</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>,</span><span style=color:#e6db74>&#34;请检查信息是否输入完整&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;友情提示&#34;</span><span style=color:#f92672>,</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>INFORMATION_MESSAGE</span><span style=color:#f92672>);</span>
+
+<span style=color:#f92672>}</span>
+st<span style=color:#f92672>.</span><span style=color:#a6e22e>close</span><span style=color:#f92672>();</span>
+<span style=color:#f92672>}</span>
+<span style=color:#66d9ef>catch</span><span style=color:#f92672>(</span>SQLException e<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>showMessageDialog</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>,</span>e<span style=color:#f92672>.</span><span style=color:#a6e22e>getMessage</span><span style=color:#f92672>(),</span> <span style=color:#e6db74>&#34;对不起,出错啦&#34;</span><span style=color:#f92672>,</span>JOptionPane<span style=color:#f92672>.</span><span style=color:#a6e22e>ERROR_MESSAGE</span><span style=color:#f92672>);}</span>
+
+<span style=color:#f92672>}</span>
+<span style=color:#f92672>});</span>
+<span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

@@ -1,0 +1,205 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>匿名委托的学习 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>匿名委托的学习</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents></nav></div></div><div class="content post__content clearfix"><p>什么是委托？MSDN上面是这样解释的</p><p><a href=http://msdn.microsoft.com/zh-cn/library/900fyy8e.aspx>委托</a>是一种定义方法签名的类型，可以与具有兼容签名的任何方法关联。您可以通过委托调用方法。委托用于将方法作为参数传递给其他方法。</p><p>那我们为什么要了解委托呢，不知道委托行不行吖？答案是不行的，委托是在.net中很基础的东西，包括事件是都是委托。</p><p>委托具有以下特点：</p><ul><li>委托类似于 C++ 函数指针，但它们是类型安全的。</li><li>委托允许将方法作为参数进行传递。</li><li>委托可用于定义回调方法。</li><li>委托可以链接在一起；例如，可以对一个事件调用多个方法。</li><li>方法不必与委托签名完全匹配。有关更多信息，请参见Covariance and Contravariance<a href=http://msdn.microsoft.com/zh-cn/library/ms173174.aspx>委托中的协变和逆变（C# 编程指南）</a>。</li><li>C# 2.0 版引入了<a href=http://msdn.microsoft.com/zh-cn/library/0yw3tz5k.aspx>匿名方法</a>的概念，此类方法允许将代码块作为参数传递，以代替单独定义的方法。C# 3.0 引入了 Lambda 表达式，利用它们可以更简练地编写内联代码块。匿名方法和 Lambda 表达式（在某些上下文中）都可编译为委托类型。这些功能统称为匿名函数。</li></ul><p>那我们学习委托能给我们带来什么好处捏？</p><p>我想好处大概有以下：</p><p>1.当然提高效率了，以前要写N个函数的地方，现在一个委托就搞定了。说白了，就是如何偷懒。</p><p>2.安全性得到了提高，都交给委托去办了，我们就不用担心了，当然这是在非常了解委托的前提下 。</p><p>在园子还有一篇<a href=http://www.cnblogs.com/jimmyzhang/archive/2007/09/23/903360.html>关于委托的文章</a>，<a href=http://www.cnblogs.com/yjmyzz/archive/2009/11/23/1608818.html>这里也有</a>，文章讲了很多，,基本上从重构开始到模式，将委托和事件的思维过程完全重现，文中是一步步来思考，一步步解释委托，、由思考过程来导向，一番看下来，简直是享受啊，强烈建议新手看看，不要去MSDN上面死板的说明，强力推荐。</p><p>下面的代码来记录我学习委托的过程。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-csharp data-lang=csharp><span style=color:#66d9ef>using</span> System;
+
+<span style=color:#66d9ef>using</span> System.Collections.Generic;
+
+<span style=color:#66d9ef>using</span> System.Text;
+
+<span style=color:#66d9ef>namespace</span> Artur.Study.MyDelegate
+{
+<span style=color:#75715e>//好我们先定义一个委托,注意：
+</span><span style=color:#75715e>//该委托有一个string类型的形参跟方法SampleDelegateMethod签名一样
+</span><span style=color:#75715e>//何为方法的签名?
+</span><span style=color:#75715e>//方法的签名在声明该方法的类中必须唯一。
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//方法的签名由方法的名称及其参数的数目、修饰符和类型组成。方法的签名不包含返回类型。
+</span><span style=color:#75715e>//见这里[C# 语言规范 3.0](http://msdn.microsoft.com/zh-cn/vcsharp/aa336809.aspx) 1.6.6节
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//在方法重载的上下文中，方法的签名不包括返回值。但在委托的上下文中，签名的确包括返回值。换句话说，方法和委托必须具有相同的返回值。 [见MSDN](http://msdn.microsoft.com/zh-cn/library/ms173171.aspx)
+</span><span style=color:#75715e></span>
+<span style=color:#66d9ef>delegate</span> <span style=color:#66d9ef>void</span> SampleDelegate(<span style=color:#66d9ef>string</span> name);
+<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyDelegateSample</span>
+{
+staticvoid SampleDelegateMethod(<span style=color:#66d9ef>string</span> name)
+{
+Console.WriteLine(name);
+}
+staticvoid mysd(<span style=color:#66d9ef>string</span> mes)
+{
+Console.WriteLine(mes+<span style=color:#960050;background-color:#1e0010>”</span>,the second time<span style=color:#960050;background-color:#1e0010>”</span>);
+}
+staticvoid Main()
+{
+<span style=color:#66d9ef>string</span> myde=<span style=color:#960050;background-color:#1e0010>”</span>Artur<span style=color:#960050;background-color:#1e0010>”</span>;
+<span style=color:#75715e>//声明一个带参数的委托先
+</span><span style=color:#75715e></span>
+SampleDelegate sd1 = SampleDelegateMethod;
+<span style=color:#75715e>//注意等号的右边可以直接是函数名，这样最简便
+</span><span style=color:#75715e>//也可以是这样的,将函数名当做参数传递
+</span><span style=color:#75715e>//SampleDelegate s = new SampleDelegate(SampleDelegateMethod);
+</span><span style=color:#75715e>//再声明一个匿名委托，
+</span><span style=color:#75715e></span>
+SampleDelegate sd2 =<span style=color:#66d9ef>delegate</span>(<span style=color:#66d9ef>string</span> message)
+{
+Console.WriteLine(message);
+Console.WriteLine(myde);
+<span style=color:#75715e>//匿名函数在这里访问了当前上下文的变量myde，该变量并不在函数方法内部。
+</span><span style=color:#75715e></span>
+};
+<span style=color:#75715e>//匿名委托不用以函数名为参数进行传递了，直接具体的实现函数
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//可以将多个方法绑定到同一个委托变量，如下：
+</span><span style=color:#75715e></span>
+SampleDelegate mysd1;
+
+mysd1 = SampleDelegateMethod;
+mysd1 += mysd;
+
+mysd1(<span style=color:#960050;background-color:#1e0010>“</span>Hello World<span style=color:#960050;background-color:#1e0010>”</span>);
+
+<span style=color:#75715e>//该委托会依次调用绑定的方法
+</span><span style=color:#75715e></span>
+Console.ReadLine();
+}
+
+}
+
+}
+
+hello World
+
+<span style=color:#66d9ef>this</span> <span style=color:#66d9ef>is</span> a anonymous <span style=color:#66d9ef>delegate</span>
+
+Artur
+Hello World
+
+Hello World,the second times
+
+<span style=color:#960050;background-color:#1e0010>还有个例子在</span>VS2008的QuickStart文件夹下面的<span style=color:#960050;background-color:#1e0010>。</span>
+
+<span style=color:#66d9ef>using</span> System;
+<span style=color:#66d9ef>using</span> System.Collections.Generic;
+<span style=color:#66d9ef>using</span> System.Text;
+
+
+
+<span style=color:#66d9ef>namespace</span> AnonymousDelegate_Sample
+{
+
+<span style=color:#75715e>//委托的定义必须与最终被调用的方法保持签名一致
+</span><span style=color:#75715e>//委托与最终调用的方法的签名必须一致
+</span><span style=color:#75715e></span>
+<span style=color:#66d9ef>delegate</span> <span style=color:#66d9ef>decimal</span> CalculateBonus(<span style=color:#66d9ef>decimal</span> sales);
+<span style=color:#75715e>//声明了一个委托的方法，返回类型为decimal,参数为decimal
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//定义个一个类Enployee
+</span><span style=color:#75715e></span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Employee</span>
+{
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>string</span> name;
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>decimal</span> sales;
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>decimal</span> bonus;
+<span style=color:#66d9ef>public</span> CalculateBonus calculation_algorithm;
+}
+
+<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Program</span>
+{
+
+<span style=color:#75715e>//定义了两种委托方法执行计算奖金
+</span><span style=color:#75715e>//一种是指定方法的委托，另一种是匿名委托
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>/*下面是第一个委托所指定的方法
+</span><span style=color:#75715e>\* 声明了一个计算可执行的奖金算法
+</span><span style=color:#75715e>*/</span>
+<span style=color:#66d9ef>static</span> <span style=color:#66d9ef>decimal</span> CalculateStandardBonus(<span style=color:#66d9ef>decimal</span> sales) <span style=color:#75715e>//静态的方法 签名跟委托一样的
+</span><span style=color:#75715e></span>{
+<span style=color:#66d9ef>return</span> sales / <span style=color:#ae81ff>10</span>;
+}
+
+<span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> Main(<span style=color:#66d9ef>string</span>[] args)
+{
+
+<span style=color:#66d9ef>decimal</span> multiplier = <span style=color:#ae81ff>2</span>;
+<span style=color:#75715e>/*是声明一个在算法中用到的变量
+</span><span style=color:#75715e>\* 该变量会被匿名委托访问
+</span><span style=color:#75715e>*/</span>
+
+CalculateBonus standard_bonus = <span style=color:#66d9ef>new</span> CalculateBonus(CalculateStandardBonus);
+<span style=color:#75715e>//定义个一个委托，将函数CalculateStandardBonus当做参数进行传递
+</span><span style=color:#75715e></span>
+CalculateBonus enhanced_bonus = <span style=color:#66d9ef>delegate</span>(<span style=color:#66d9ef>decimal</span> sales) { <span style=color:#66d9ef>return</span> multiplier * sales / <span style=color:#ae81ff>10</span>; };
+<span style=color:#75715e>//再次定义一个委托，注意这里是匿名的委托，没有指定函数名，但是编译器怎么知道是函数CalculateStandardBonus呢
+</span><span style=color:#75715e>//答案是唯一的签名，返回类型和参数类型都为decimal只有函数CalculateStandardBonus（）
+</span><span style=color:#75715e>// 实例化一些员工对象
+</span><span style=color:#75715e></span>Employee[] staff = <span style=color:#66d9ef>new</span> Employee[<span style=color:#ae81ff>5</span>];
+
+<span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> i = <span style=color:#ae81ff>0</span>; i &lt; <span style=color:#ae81ff>5</span>; i++)
+staff[i] = <span style=color:#66d9ef>new</span> Employee();
+
+<span style=color:#75715e>// 实例化赋值 Employees.
+</span><span style=color:#75715e></span>staff[<span style=color:#ae81ff>0</span>].name = <span style=color:#960050;background-color:#1e0010>“</span>Mr Apple<span style=color:#960050;background-color:#1e0010>”</span>;
+staff[<span style=color:#ae81ff>0</span>].sales = <span style=color:#ae81ff>100</span>;
+staff[<span style=color:#ae81ff>0</span>].calculation_algorithm = standard_bonus;
+
+staff[<span style=color:#ae81ff>1</span>].name = <span style=color:#960050;background-color:#1e0010>“</span>Ms Banana<span style=color:#960050;background-color:#1e0010>”</span>;
+staff[<span style=color:#ae81ff>1</span>].sales = <span style=color:#ae81ff>200</span>;
+staff[<span style=color:#ae81ff>1</span>].calculation_algorithm = standard_bonus;
+
+staff[<span style=color:#ae81ff>2</span>].name = <span style=color:#960050;background-color:#1e0010>“</span>Mr Cherry<span style=color:#960050;background-color:#1e0010>”</span>;
+staff[<span style=color:#ae81ff>2</span>].sales = <span style=color:#ae81ff>300</span>;
+staff[<span style=color:#ae81ff>2</span>].calculation_algorithm = standard_bonus;
+<span style=color:#75715e>//上面的三个使用的是具体方法的委托
+</span><span style=color:#75715e></span>staff[<span style=color:#ae81ff>3</span>].name = <span style=color:#960050;background-color:#1e0010>“</span>Mr Date<span style=color:#960050;background-color:#1e0010>”</span>;
+staff[<span style=color:#ae81ff>3</span>].sales = <span style=color:#ae81ff>100</span>;
+staff[<span style=color:#ae81ff>3</span>].calculation_algorithm = enhanced_bonus;
+
+staff[<span style=color:#ae81ff>4</span>].name = <span style=color:#960050;background-color:#1e0010>“</span>Ms Elderberry<span style=color:#960050;background-color:#1e0010>”</span>;
+staff[<span style=color:#ae81ff>4</span>].sales = <span style=color:#ae81ff>250</span>;
+staff[<span style=color:#ae81ff>4</span>].calculation_algorithm = enhanced_bonus;
+<span style=color:#75715e>//上面2个匿名委托
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//为所有员工计算福利
+</span><span style=color:#75715e></span><span style=color:#66d9ef>foreach</span> (Employee person <span style=color:#66d9ef>in</span> staff)
+PerformBonusCalculation(person);
+
+<span style=color:#75715e>//显示全部员工的详细信息
+</span><span style=color:#75715e></span><span style=color:#66d9ef>foreach</span> (Employee person <span style=color:#66d9ef>in</span> staff)
+DisplayPersonDetails(person);
+
+Console.Read();
+}
+
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> PerformBonusCalculation(Employee person)
+{
+
+<span style=color:#75715e>//该方法利用委托存储person对象
+</span><span style=color:#75715e></span>
+<span style=color:#75715e>//注意该方法可访问multiplier局部变量,尽管multiplier变量不在该方法内部
+</span><span style=color:#75715e>//即是具体的参数具体实现。
+</span><span style=color:#75715e></span>person.bonus = person.calculation_algorithm(person.sales);
+}
+
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> DisplayPersonDetails(Employee person)
+{
+Console.WriteLine(person.name);
+Console.WriteLine(person.bonus);
+Console.WriteLine(<span style=color:#960050;background-color:#1e0010>“—————“</span>);
+}
+</code></pre></div><p>在这个QuickSatrt的例子，声明了两个委托来计算福利，一个是带具体方法名的委托，一个是匿名委托</p><p>总结：</p><p>1.委托实际上就是将函数当做传参数来传递</p><p>2.匿名委托与委托最大的区别就是能够访问当前上下文的变量，即使变量不在方法内部。</p><p>3.事件其实也是一种委托。</p><p>4.在委托中必须具有相同的方法签名，包括返回类型和参数。</p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

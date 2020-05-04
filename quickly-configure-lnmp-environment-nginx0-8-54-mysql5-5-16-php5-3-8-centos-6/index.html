@@ -1,0 +1,263 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>快速配置LNMP环境Nginx0.8.54+MYSQL5.5.16+PHP5.3.8+CentOS 6 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>快速配置LNMP环境Nginx0.8.54+MYSQL5.5.16+PHP5.3.8+CentOS 6</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><a href=#安装nginx-和-php>安装Nginx 和 PHP</a></li><li><a href=#安装mysql数据库>安装mysql数据库</a></li><li><a href=#安装php常用扩展>安装PHP常用扩展</a></li><li><a href=#spawn-fastcgi-和-php-fpm>Spawn-fastcgi 和 Php-fpm</a></li><li><a href=#服务器优化>服务器优化</a></li></ul></nav></div></div><div class="content post__content clearfix"><p>最近购买了Linode的VPS服务，就开始着手以Nginx 为基础搭建LNMP平台，体验Nginx的魅力。Linux OS选择的是Linode的CentOS 6，话说CentOS 6出来太慢了。。。</p><p>仅此篇文章记录配置生产环境的过程。</p><h2 id=安装nginx-和-php>安装Nginx 和 PHP</h2><ol><li>修改你的hostname</li></ol><pre><code>echo &quot;HOSTNAME=baby&quot; &gt;&gt; /etc/sysconfig/network
+hostname &quot;baby&quot;
+</code></pre><ol><li>编辑你的/etc/hosts。添加以下</li></ol><pre><code>127.0.0.1   localhost.localdomain   localhost
+12.34.56.78 baby.example.com   baby
+</code></pre><ol><li>添加EPEL软件仓库，为Fedora 开发的仓库，同样适用CentOS 6.</li></ol><pre><code>rpm -Uvh http://download.fedora.redhat.com/pub/epel/6/i386/epel-release-6-5.noarch.rpm
+</code></pre><p>利用yum 安装Nginx ,PHP,Spawn-fcgi,安装时会询问导入EPEL的key文件，直接y就ok。</p><pre><code>yum install nginx php-cli php make automake gcc gcc-c++ spawn-fcgi wget
+</code></pre><ol><li>添加nginx服务，设置开机启动，开启nginx</li></ol><pre><code>chkconfig --add nginx
+chkconfig --level 35 nginx on
+service nginx start
+</code></pre><p>现在访问你的IP地址，可以看到nginx的默认页面。</p><ol><li>可以开始配置，创建网站文件夹。</li></ol><pre><code>mkdir -p /srv/www/www.xbc.me/public_html
+mkdir /srv/www/www.xbc.me/logs
+chown -R nginx:nginx /srv/www/www.xbc.me
+mkdir /etc/nginx/sites-available
+mkdir /etc/nginx/sites-enabled
+</code></pre><p>在你的/etc/nginx/nginx.conf添加不同网站的配置文件</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># Load virtual host configuration files.</span>
+include /etc/nginx/sites-enabled/*;
+</code></pre></div><p>添加网站配置文件/etc/nginx/sites-available/www.xbc.me</p><pre><code>server {
+    server_name www.xbc.me xbc.me;
+    access_log /srv/www/www.xbc.me/logs/access.log;
+    error_log /srv/www/www.xbc.me/logs/error.log;
+    root /srv/www/www.xbc.me/public_html;
+
+    location / {
+        index index.html index.htm index.php;
+    }
+
+    location ~ \.php$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass  127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME /srv/www/www.xbc.me/public_html$fastcgi_script_name;
+    }
+}
+</code></pre><p>在nginx启用网站配置文件</p><pre><code>cd /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/www.xbc.me
+service nginx restart
+</code></pre><ol><li>配置spawn-fcgi</li></ol><pre><code>cd /opt
+wget -O php-fastcgi-rpm.sh http://library.linode.com/assets/696-php-fastcgi-rpm.sh
+mv php-fastcgi-rpm.sh /usr/bin/php-fastcgi
+chmod +x /usr/bin/php-fastcgi
+wget -O php-fastcgi-init-rpm.sh http://library.linode.com/assets/697-php-fastcgi-init-rpm.sh
+mv php-fastcgi-init-rpm.sh /etc/rc.d/init.d/php-fastcgi
+chmod +x /etc/rc.d/init.d/php-fastcgi
+chkconfig --add php-fastcgi
+chkconfig php-fastcgi on
+/etc/init.d/php-fastcgi start
+</code></pre><ol><li>启动spawn-fcgi服务，可以测试PHP</li></ol><p>新建文件/srv/www/www.xbc.me/public_html/test.php</p><h2 id=安装mysql数据库>安装mysql数据库</h2><pre><code>yum install mysql-server
+</code></pre><p>添加mysqld开机服务</p><pre><code>/sbin/chkconfig --levels 235 mysqld on
+</code></pre><p>启动mysql守护进程</p><pre><code>/etc/init.d/mysqld start
+</code></pre><p>配置MYSQL，进行安全安装。</p><pre><code>mysql_secure_installation
+</code></pre><p>这条命令会</p><ol><li><p>提示你创建root密码</p></li><li><p>删除匿名用户</p></li><li><p>禁用root从localhost以外登录</p></li><li><p>删除测试数据库</p></li><li><p>提示刷新权限表</p></li></ol><p>强烈推荐全部选择YES！！！</p><h2 id=安装php常用扩展>安装PHP常用扩展</h2><p>安装扩展pear、mysql、apc加速器。</p><pre><code>yum install php-pear
+
+yum install php-mysql
+
+yum install php-pecl-apc
+</code></pre><p>重启php-fastcgi</p><pre><code>killall php-cgi
+php-fastcgi start
+</code></pre><p>访问网站子目录出现403 Forbidden错误，假设子目录为ecshop，修改网站配置文件/etc/nginx/sites-available/www.xbc.me</p><pre><code>location /ecshop/ {
+    index index.php;
+}
+</code></pre><p>出现错误FastCGI sent in stderr: &ldquo;PHP Warning: Unknown: open(/var/lib/php/session/</p><p>/var/lib/php 权限预设为root apache，因为我们安装的是nginx，运行用户为nginx。</p><p>修改为root nginx 即可</p><h2 id=spawn-fastcgi-和-php-fpm>Spawn-fastcgi 和 Php-fpm</h2><p>从spawn-fastcgi转到php-fpm,最大的好处是内存占用小、稳定、可以无需重启载入配置。</p><p>默认CentOS 6的php版本是5.3.2,而php-fpm自从5.3.3以后的版本就集成了php-fpm，成为官方的人了。orz….</p><p>为了能贴近文章的标题，特找到一偷懒的方法利用yum 升级php–利用第三方的仓库remi。</p><p>添加remi仓库</p><pre><code>cd /opt
+wget http://rpms.famillecollet.com/RPM-GPG-KEY-remi
+</code></pre><p>导入验证key文件</p><pre><code>rpm --import http://rpms.famillecollet.com/RPM-GPG-KEY-remi
+</code></pre><p>验证rpm包</p><pre><code>rpm -K remi-release-6.rpm
+</code></pre><p>添加remi 仓库</p><pre><code>rpm -i remi-release-6.rpm
+</code></pre><p>更新，如果已经安装ldop扩展，需要先删除，可能会出现依赖的问题。</p><pre><code>yum remove php-ldap #to squash later dependency issues
+</code></pre><p>升级php 和mysql</p><pre><code>yum --enablerepo=remi update mysql php
+</code></pre><p>升级完成后,PHP的版本为5.3.8，MYSQL为5.5.16</p><p>安装php-fpm</p><pre><code>yum --enablerepo=remi install php-fpm
+</code></pre><p>MYSQL升级完成后，出现</p><pre><code>Missing system table mysql.proxies_priv; please run mysql_upgrade to create it
+</code></pre><p>MYSQL需要运行mysql_upgrade升级脚本，如果运行命令出错，请用root来执行。</p><pre><code>mysql_upgrade -u root -p
+</code></pre><h2 id=服务器优化>服务器优化</h2><p>安装好LNMP环境后，可优化下配置，发挥服务器最大性能。这里主要讲后端的优化，前端优化请参考<a href=http://developer.yahoo.com/performance/rules.html>Yahoo的前端优化最佳实践</a>。</p><p>服务器硬件</p><p>内存： 768M</p><p>CPU： Intel(R) Xeon(R) CPU L5520 @ 2.27GHz 四核</p><p>带宽： 百兆共享</p><p>机房所在地：美国加利福尼亚州</p><p>Nginx配置优化/etc/nginx/nginx.conf参数,仅供参考。</p><pre><code>cat /etc/nginx/nginx.conf | grep -v &quot;#&quot;
+user              nginx;
+worker_processes  2;
+
+error_log  /var/log/nginx/error.log;
+
+pid        /var/run/nginx.pid;
+worker_rlimit_nofile 65535;
+
+events {
+    use epoll;
+    worker_connections  65535;
+}
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] &quot;$request&quot; '
+                      '$status $body_bytes_sent &quot;$http_referer&quot; '
+                      '&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+
+    keepalive_timeout  65;
+
+    gzip  on;
+    gzip_min_length  1000;
+    gzip_buffers     4 8k;
+    gzip_types       text/plain application/x-javascript text/css application/xml;
+    fastcgi_connect_timeout 300;
+    fastcgi_send_timeout 300;
+    fastcgi_read_timeout 300;
+    fastcgi_buffer_size 64k;
+    fastcgi_buffers 4 64k;
+    fastcgi_busy_buffers_size 128k;
+    fastcgi_temp_file_write_size 128k;
+    server {
+        listen       80;
+        server_name  _;
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        }
+
+        error_page  404              /404.html;
+        location = /404.html {
+            root   /usr/share/nginx/html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
+</code></pre><p>主机配置文件/etc/nginx/sites-enabled/www.xbc.me</p><pre><code>cat /etc/nginx/sites-enabled/www.xbc.me | grep -v &quot;#&quot;
+server {
+    server_name www.xbc.me xbc.me;
+    access_log /srv/www/www.xbc.me/logs/access.log;
+    error_log /srv/www/www.xbc.me/logs/error.log;
+    root /srv/www/www.xbc.me/public_html;
+
+    location / {
+        index index.html index.htm index.php;
+    }
+    location /phpmyadmin/ {
+        if (!-e $request_filename) {
+            rewrite ^.+/?(/phpmyadmin/.*\.php)$ $1 last;
+            rewrite ^(.+)$ /phpmyadmin/index.php?q=$1 last;
+        }
+        index index.php;
+    }
+    location ~ \.php$ {
+        fastcgi_pass  127.0.0.1:9000;
+        fastcgi_index index.php;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /srv/www/www.xbc.me/public_html$fastcgi_script_name;
+    }
+    location ~* \.(js|css|jpg|jpeg|gif|png)$ {
+        if (-f $request_filename) {
+           expires 30d;
+           break;
+        }
+    }
+}
+</code></pre><p>MYSQL参数优化/etc/my.cnf</p><pre><code>cat /etc/my.cnf | grep -v &quot;#&quot;
+[client]
+port            = 3306
+socket          = /var/lib/mysql/mysql.sock
+
+[mysqld]
+datadir=/var/lib/mysql
+user=mysql
+symbolic-links=0
+
+port            = 3306
+socket          = /var/lib/mysql/mysql.sock
+skip-external-locking
+key_buffer_size = 16M
+max_allowed_packet = 1M
+table_open_cache = 64
+sort_buffer_size = 512K
+net_buffer_length = 256K
+join_buffer_size = 512K
+read_buffer_size = 512K
+read_rnd_buffer_size = 512K
+myisam_sort_buffer_size = 8M
+
+default-storage-engine = MyISAM
+skip-innodb
+skip-name-resolve
+external-locking = FALSE
+slow_query_log
+slow_query_log_file=/tmp/slow.log
+long_query_time = 1
+query_cache_size = 1M
+max_heap_table_size = 32M
+tmp_table_size = 32M
+max_connections =8
+
+thread_stack = 192K
+thread_cache = 128
+thread_cache_size = 10
+thread_concurrency = 8
+bind-address = 173.255.248.110
+log-bin=mysql-bin
+
+binlog_format=mixed
+expire_logs_days = 30
+server-id       = 1
+
+[mysqldump]
+quick
+max_allowed_packet = 16M
+
+[mysql]
+no-auto-rehash
+
+[myisamchk]
+key_buffer_size = 20M
+sort_buffer_size = 20M
+read_buffer = 2M
+write_buffer = 2M
+
+[mysqlhotcopy]
+interactive-timeout
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+</code></pre><p>PHP配置优化，尽可能的加载可能少的模块，添加php加速器apc、eaccelerator</p><p>设置php的内存限制</p><p>memory_limit = 16M</p><p>php-fpm 配置优化</p><pre><code>cat /etc/php-fpm.d/www.conf | grep -v &quot;;&quot;
+[www]
+listen = 127.0.0.1:9000
+listen.allowed_clients = 127.0.0.1
+
+user = nginx
+group = nginx
+
+pm = dynamic
+pm.max_children = 32
+pm.start_servers = 2
+pm.min_spare_servers = 2
+pm.max_spare_servers = 8
+
+slowlog = /var/log/php-fpm/www-slow.log
+
+php_admin_value[error_log] = /var/log/php-fpm/www-error.log
+php_admin_flag[log_errors] = on
+</code></pre><p>参考</p><p><a href=http://library.linode.com/web-servers/nginx/php-fastcgi/centos-5>http://library.linode.com/web-servers/nginx/php-fastcgi/centos-5</a></p><p><a href=http://library.linode.com/lamp-guides/centos-6#sph_install-mysql>http://library.linode.com/lamp-guides/centos-6#sph_install-mysql</a></p><p><a href=http://www.clearfoundation.com/component/option,com_kunena/Itemid,232/catid,17/func,view/id,18743/>http://www.clearfoundation.com/component/option,com_kunena/Itemid,232/catid,17/func,view/id,18743/</a></p><p><a href=http://www.mike.org.cn/articles/what-is-cgi-fastcgi-php-fpm-spawn-fcgi/>http://www.mike.org.cn/articles/what-is-cgi-fastcgi-php-fpm-spawn-fcgi/</a></p><p><a href=http://engin.bzzzt.biz/2011/04/06/mysql-workbench-fetching-problem-solved/>http://engin.bzzzt.biz/2011/04/06/mysql-workbench-fetching-problem-solved/</a></p><p><a href=http://www.linuxde.net/2011/06/127.html>512M内存以下的小内存VPS性能优化和安全防护</a></p><p><a href=http://www.linuxde.net/2011/10/1191.html>小规模低性能低流量网站优化实践</a></p></div><footer class=post__footer><div class="post__tags tags clearfix"><svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5.0 11V3C0 1.5.8.8.8.8S1.5.0 3 0h8c1.5.0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 100-6 3 3 0 000 6z"/></svg><ul class=tags__list><li class=tags__item><a class="tags__link btn" href=/tags/mysql/ rel=tag>MySQL</a></li><li class=tags__item><a class="tags__link btn" href=/tags/nginx/ rel=tag>Nginx</a></li><li class=tags__item><a class="tags__link btn" href=/tags/php/ rel=tag>PHP</a></li><li class=tags__item><a class="tags__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ rel=tag>后端</a></li></ul></div></footer></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>

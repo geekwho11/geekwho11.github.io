@@ -1,0 +1,191 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>数据结构双链表 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>数据结构双链表</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents></nav></div></div><div class="content post__content clearfix"><p><strong>双向链表（Double Linked List）（详情请看<a href=http://www.hiahia.org/datastructure/xianxingbiao/xianxingbiao2.3.3.htm>这里</a>）</strong></p><p>双（向）链表中有两条方向不同的链，即每个结点中除next域存放后继结点地址外，还增加一个指向其直接前趋的指针域prior。</p><p>tip：
+①双链表由头指针head惟一确定的。
+②带头结点的双链表的某些运算变得方便。
+③将头结点和尾结点链接起来，为双（向）循环链表。</p><p><strong>双向链表的结点结构和形式描述</strong></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#66d9ef>typedef</span> <span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>dlistnode</span>{
+DataType data;<span style=color:#75715e>//数据类型
+</span><span style=color:#75715e></span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>dlistnode</span> <span style=color:#f92672>*</span>prior,<span style=color:#f92672>*</span>next; <span style=color:#75715e>//定义前驱和后继结点指针
+</span><span style=color:#75715e></span>}DListNode;
+<span style=color:#66d9ef>typedef</span> DListNode <span style=color:#f92672>*</span>DLinkList;
+DLinkList head;
+</code></pre></div><p>双链表的删除、插入操作：</p><p>由于双链表的对称性，在双链表能能方便地完成各种插入、删除操作。（源代码参考了<a href=http://blog.csdn.net/tanlingyun/archive/2007/04/25/1584087.aspx>这位同学</a>）</p><p>VS2008编译 运行通过</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;stdio.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;malloc.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e></span><span style=color:#66d9ef>typedef</span> <span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>node</span> <span style=color:#75715e>//定义双链表
+</span><span style=color:#75715e></span>{
+<span style=color:#66d9ef>int</span> data;
+<span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>node</span> <span style=color:#f92672>*</span>prior;
+<span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>node</span> <span style=color:#f92672>*</span>next;
+}snode;
+
+snode <span style=color:#f92672>*</span><span style=color:#a6e22e>creat</span>() <span style=color:#75715e>//创建双链表
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>head, <span style=color:#f92672>*</span>p, <span style=color:#f92672>*</span>q;
+<span style=color:#66d9ef>int</span> x;
+head <span style=color:#f92672>=</span> (snode <span style=color:#f92672>*</span>)malloc(<span style=color:#66d9ef>sizeof</span>(snode));<span style=color:#75715e>//分配内存空间
+</span><span style=color:#75715e></span>q <span style=color:#f92672>=</span> head;<span style=color:#75715e>//head 和p指向头指针
+</span><span style=color:#75715e></span>printf(<span style=color:#e6db74>&#34;请输入创建双链表的值,以-1结束. &#34;</span>);
+printf(<span style=color:#e6db74>&#34;x = &#34;</span>);
+scanf(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>x);
+<span style=color:#66d9ef>while</span> (x <span style=color:#f92672>!=</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>)
+{
+p <span style=color:#f92672>=</span> (snode <span style=color:#f92672>*</span>)malloc(<span style=color:#66d9ef>sizeof</span>(snode));<span style=color:#75715e>//创建一个新的结点
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>data <span style=color:#f92672>=</span> x;<span style=color:#75715e>//输入数据
+</span><span style=color:#75715e></span>q<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> p;<span style=color:#75715e>//head头结点的next存储下一个结点的首地址
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> q;<span style=color:#75715e>//新结点的prior存储前一个结点的首地址
+</span><span style=color:#75715e></span>q <span style=color:#f92672>=</span> p;<span style=color:#75715e>//将q移动到新的结点
+</span><span style=color:#75715e></span>printf(<span style=color:#e6db74>&#34;x = &#34;</span>);
+scanf(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>x);
+}
+q<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> NULL;<span style=color:#75715e>//将新结点的next置空
+</span><span style=color:#75715e></span><span style=color:#66d9ef>return</span> head;<span style=color:#75715e>//返回头指针
+</span><span style=color:#75715e></span>}
+
+<span style=color:#66d9ef>void</span> <span style=color:#a6e22e>display</span>(snode <span style=color:#f92672>*</span>head)<span style=color:#75715e>//显示数据
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>p <span style=color:#f92672>=</span> head<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//将p移动到头指针
+</span><span style=color:#75715e></span><span style=color:#66d9ef>while</span> (p <span style=color:#f92672>!=</span> NULL)<span style=color:#75715e>//循环输出数据
+</span><span style=color:#75715e></span>{
+printf(<span style=color:#e6db74>&#34;%4d&#34;</span>, p<span style=color:#f92672>-&gt;</span>data);
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//移动到下一个结点
+</span><span style=color:#75715e></span>}
+printf(<span style=color:#e6db74>&#34; &#34;</span>);
+}
+
+<span style=color:#66d9ef>int</span> <span style=color:#a6e22e>length</span>(snode <span style=color:#f92672>*</span>head)<span style=color:#75715e>//测链表的结点数
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>p <span style=color:#f92672>=</span> head<span style=color:#f92672>-&gt;</span>next;
+<span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+<span style=color:#66d9ef>while</span> (p <span style=color:#f92672>!=</span> NULL)
+{
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//移动到下一个结点
+</span><span style=color:#75715e></span>i<span style=color:#f92672>++</span>;
+}
+<span style=color:#66d9ef>return</span> i;
+}
+
+<span style=color:#66d9ef>void</span> <span style=color:#a6e22e>opposite</span>(snode <span style=color:#f92672>*</span>head)<span style=color:#75715e>//反向输出
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>p <span style=color:#f92672>=</span> head<span style=color:#f92672>-&gt;</span>next;
+<span style=color:#66d9ef>while</span> (p<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>!=</span> NULL)
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//将p移动到倒数第二个结点
+</span><span style=color:#75715e></span><span style=color:#66d9ef>while</span> (p <span style=color:#f92672>!=</span> head)
+{
+printf(<span style=color:#e6db74>&#34;%4d&#34;</span>, p<span style=color:#f92672>-&gt;</span>data);
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>prior;<span style=color:#75715e>//移动指针
+</span><span style=color:#75715e></span>}
+printf(<span style=color:#e6db74>&#34; &#34;</span>);
+}
+
+<span style=color:#66d9ef>int</span> <span style=color:#a6e22e>insnode</span>(snode <span style=color:#f92672>*</span>head, <span style=color:#66d9ef>int</span> x, <span style=color:#66d9ef>int</span> i) <span style=color:#75715e>//把x插入到链表的第i的位置
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>p <span style=color:#f92672>=</span> head<span style=color:#f92672>-&gt;</span>next, <span style=color:#f92672>*</span>s;
+<span style=color:#66d9ef>if</span>(i <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>1</span> <span style=color:#f92672>||</span> i <span style=color:#f92672>&gt;</span> length(head) <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)
+<span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+<span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (i <span style=color:#f92672>==</span> <span style=color:#ae81ff>1</span>)<span style=color:#75715e>//插入head中间结点
+</span><span style=color:#75715e></span>{
+s <span style=color:#f92672>=</span> (snode <span style=color:#f92672>*</span>)malloc(<span style=color:#66d9ef>sizeof</span>(snode)); <span style=color:#75715e>//分配内存
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> p;<span style=color:#75715e>//结点s的next存储p所指向结点的首地址
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> s;<span style=color:#75715e>//p所指向结点的prior存储结点s的首地址
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> head;<span style=color:#75715e>//结点s的next存储head结点的首地址
+</span><span style=color:#75715e></span>head<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> s;<span style=color:#75715e>//head结点的next存储结点s的首地址
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>data <span style=color:#f92672>=</span> x;<span style=color:#75715e>//赋值
+</span><span style=color:#75715e></span>}
+<span style=color:#66d9ef>else</span><span style=color:#75715e>//在中间插入
+</span><span style=color:#75715e></span>{
+s <span style=color:#f92672>=</span> (snode <span style=color:#f92672>*</span>)malloc(<span style=color:#66d9ef>sizeof</span>(snode)); <span style=color:#75715e>//分配内存
+</span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> j <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>; j <span style=color:#f92672>&lt;</span> i <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>; j<span style=color:#f92672>++</span>)
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//移动到要插入的结点
+</span><span style=color:#75715e></span><span style=color:#66d9ef>if</span> (p<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>!=</span> NULL)
+{
+s<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//将结点s的next指向p所指向结点的下一个结点
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>next<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> s;<span style=color:#75715e>//p所指向结点的下一个结点的prior指向s的首地址
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> s;<span style=color:#75715e>//p所指的结点的next指新插入的s结点
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> p;<span style=color:#75715e>//结点s的prior指向前一个结点的首地址
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>data <span style=color:#f92672>=</span> x;
+}
+<span style=color:#66d9ef>else</span><span style=color:#75715e>//在结尾插入
+</span><span style=color:#75715e></span>{
+s<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> NULL;<span style=color:#75715e>//s是最后一个结点 将next置空
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> s;<span style=color:#75715e>//将p结点的next指向s的首地址
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> p;<span style=color:#75715e>//将结点s的prior指向前一结点的首地址
+</span><span style=color:#75715e></span>s<span style=color:#f92672>-&gt;</span>data <span style=color:#f92672>=</span> x;
+}
+}
+<span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span>;
+}
+
+<span style=color:#66d9ef>int</span> <span style=color:#a6e22e>delnode</span>(snode <span style=color:#f92672>*</span>head, <span style=color:#66d9ef>int</span> i)<span style=color:#75715e>//删除链表中第i个结点
+</span><span style=color:#75715e></span>{
+snode <span style=color:#f92672>*</span>p <span style=color:#f92672>=</span> head<span style=color:#f92672>-&gt;</span>next, <span style=color:#f92672>*</span>q <span style=color:#f92672>=</span> head;
+<span style=color:#66d9ef>if</span>(i <span style=color:#f92672>&lt;</span> <span style=color:#ae81ff>1</span> <span style=color:#f92672>||</span> i <span style=color:#f92672>&gt;</span> length(head))
+<span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+<span style=color:#66d9ef>else</span>
+{
+<span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> j <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>; j <span style=color:#f92672>&lt;</span> i; j<span style=color:#f92672>++</span>)
+{
+p <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//找到结点
+</span><span style=color:#75715e></span>q <span style=color:#f92672>=</span> q<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//找到删除的前一结点
+</span><span style=color:#75715e></span>}
+<span style=color:#66d9ef>if</span> (p<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>!=</span> NULL)
+{
+q<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//删除的结点的后一结点的首地址赋值给删除的结点的前一结点的next
+</span><span style=color:#75715e></span>p<span style=color:#f92672>-&gt;</span>next<span style=color:#f92672>-&gt;</span>prior <span style=color:#f92672>=</span> q;<span style=color:#75715e>//删除的结点的后一结点的prior指向删除的结点的前一结点的首地址
+</span><span style=color:#75715e></span>}
+<span style=color:#66d9ef>else</span><span style=color:#75715e>//删除尾结点
+</span><span style=color:#75715e></span>q<span style=color:#f92672>-&gt;</span>next <span style=color:#f92672>=</span> p<span style=color:#f92672>-&gt;</span>next;<span style=color:#75715e>//置空最后一个结点
+</span><span style=color:#75715e></span>free(p);
+}
+<span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span>;
+}
+<span style=color:#66d9ef>int</span> <span style=color:#a6e22e>main</span>()
+{
+snode <span style=color:#f92672>*</span>headl <span style=color:#f92672>=</span> creat(); <span style=color:#75715e>//创建双链表
+</span><span style=color:#75715e></span>printf(<span style=color:#e6db74>&#34;最初的链表如下： &#34;</span>);
+display(headl);
+printf(<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>为了证明是双链表反向输出： &#34;</span>);
+opposite(headl);
+<span style=color:#66d9ef>int</span> num, location;
+printf(<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>请分别输入您要插入到链表中的数以及想插入的位置：&#34;</span>);
+scanf(<span style=color:#e6db74>&#34;%d %d&#34;</span>, <span style=color:#f92672>&amp;</span>num, <span style=color:#f92672>&amp;</span>location);
+<span style=color:#66d9ef>if</span> (insnode(headl, num, location))
+{
+printf(<span style=color:#e6db74>&#34;插入新值以后的链表如下： &#34;</span>);
+display(headl);
+printf(<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>为了证明插入新值以后仍然是双链表，反向输出如下： &#34;</span>);
+opposite(headl);
+}
+<span style=color:#66d9ef>else</span>
+printf(<span style=color:#e6db74>&#34;输入有误 &#34;</span>);
+printf(<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>请输入您想删除的结点位置：&#34;</span>);
+scanf(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>location);
+<span style=color:#66d9ef>if</span> (delnode(headl, location))
+{
+printf(<span style=color:#e6db74>&#34;删除第%d个结点后的链表如下： &#34;</span>, location);
+display(headl);
+printf(<span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>为了证明删除一个结点以后仍然是双链表，反向输出如下： &#34;</span>);
+opposite(headl);
+}
+<span style=color:#66d9ef>else</span>
+printf(<span style=color:#e6db74>&#34;输入有误！ &#34;</span>);
+system(<span style=color:#e6db74>&#34;pause&#34;</span>);
+}
+</code></pre></div></div><footer class=post__footer><div class="post__tags tags clearfix"><svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5.0 11V3C0 1.5.8.8.8.8S1.5.0 3 0h8c1.5.0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 100-6 3 3 0 000 6z"/></svg><ul class=tags__list><li class=tags__item><a class="tags__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ rel=tag>数据结构</a></li></ul></div></footer></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li><li class=widget__item><a class=widget__link href=/swoole/>Swoole必知必会</a></li><li class=widget__item><a class=widget__link href=/etcd/>Etcd必知必会</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>
