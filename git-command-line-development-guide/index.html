@@ -1,0 +1,155 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Git命令行开发指南 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Git命令行开发指南</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><a href=#前言>前言</a><ul><li><a href=#命令行开发>命令行开发</a></li><li><a href=#总结>总结</a></li><li><a href=#参考链接>参考链接</a></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><h2 id=前言>前言</h2><p>做为长期使用Ubuntu的开发者，在命令行下开发已经变成一种习惯。我们在日常开发中使用Git来管理我们的源代码。仅以这篇文章记录常见的Git开发流程可能会遇到的场景。</p><h3 id=命令行开发>命令行开发</h3><p>在进行配置前，可以按照官方的教程进行<a href=https://git-scm.com/book/zh/v2/%E8%B5%B7%E6%AD%A5-%E5%AE%89%E8%A3%85-Git>安装 Git</a>。</p><h4 id=基本配置>基本配置</h4><p>我们推荐使用SSH Key方式，实现免密拉取代码。首先你需要生成秘钥，将生成的id_rsa.pub复制粘贴到你的SSH Key认证页面里。以Ubuntu为例：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># 使用ssh-keygen生成秘钥</span>
+ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key <span style=color:#f92672>(</span>/home/geekwho/.ssh/id_rsa<span style=color:#f92672>)</span>:
+Created directory <span style=color:#e6db74>&#39;/home/geekwho/.ssh&#39;</span>.
+Enter passphrase <span style=color:#f92672>(</span>empty <span style=color:#66d9ef>for</span> no passphrase<span style=color:#f92672>)</span>:
+Enter same passphrase again:
+Your identification has been saved in /home/geekwho/.ssh/id_rsa.
+Your public key has been saved in /home/geekwho/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:71YiyxIrW0X88/LbPEzB2MQs6ruzCIEXMfE4pMgaryA geekwho@xbc.me
+The key<span style=color:#960050;background-color:#1e0010>&#39;</span>s randomart image is:
++---<span style=color:#f92672>[</span>RSA 2048<span style=color:#f92672>]</span>----+
+|      <span style=color:#f92672>=</span>.     o   |
+| . . o *    . +  |
+|. o . + +  . *   |
+| +   . + .. . +  |
+|E . . o S.o    . |
+|o.   ..o..oo. .  |
+|.     o+ oo+.o   |
+|    ..o.oo+o oo  |
+|    .o ...++o.o. |
++----<span style=color:#f92672>[</span>SHA256<span style=color:#f92672>]</span>-----+
+</code></pre></div><p>配置提交开发者信息：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>git config --global user.name <span style=color:#e6db74>&#34;GeekWho&#34;</span>
+git config --global user.email geekwho@xbc.me
+git config --global core.editor vim
+git config --global core.filemode false
+</code></pre></div><h5 id=配置别名减少输入命令的长度>配置别名，减少输入命令的长度：</h5><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e>#alias 创建命令别名</span>
+git config --global alias.co checkout
+git config --global alias.ci commit
+git config --global alias.cp cherry-pick
+git config --global alias.st status
+git config --global alias.br branch
+git config --global alias.r rebase
+git config --global alias.ri rebase -i
+git config --global alias.l <span style=color:#e6db74>&#39;!git --no-pager log --graph --pretty=format:&#34;%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)&lt;%an&gt;%Creset&#34; --abbrev-commit --date=relative&#39;</span>
+git config --global alias.lg <span style=color:#e6db74>&#39;log --graph --pretty=format:&#34;%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)&lt;%an&gt;%Creset&#34; --abbrev-commit --date=relative&#39;</span>
+</code></pre></div><p>这里，我以日常的版本开发为例，使用Git进行源代码管理的操作。</p><p>我假设你有一个master(主干分支)、feature-1.0.0(版本分支)、feature-geekwho(个人开发分支)。最简单的开发流程如下：</p><ol><li>日常开发在个人开发分支feature-geekwho。</li><li>开发完成后，合并到feature-1.0.0分支。</li><li>feature-1.0.0发布上线后，合并到master。</li></ol><p>日常操作可能会有下列这些场景：</p><ol><li>拉取代码：拉取feature-1.0.0分支最新的代码</li><li>切换分支：从分支feature-geekwho切换到feature-1.0.0</li><li>合并代码：个人开发分支feature-geekwho合并最新的feature-1.0.0</li><li>整理代码：整理个人开发分支feature-geekwho的提交</li></ol><h4 id=拉取代码>拉取代码</h4><pre><code># 使用git clone 命名拉取代码
+git clone git@github.com:geekwho11/learn.php.xbcme.git
+# 默认拉取到本地是master分支
+cd learn.php.xbcme
+# 切换到feature-1.0.0分支
+git checkout feature-1.0.0
+# 拉取远端的更新
+git pull --rebase origin feature-1.0.0
+</code></pre><h4 id=切换分支>切换分支</h4><p>开发中经常会遇到依赖他人的接口，需要合并代码。我们假设当前正在feature-geekwho正在愉快地开发，但突然我们希望合并feature-geekwho的代码来解决依赖问题。这时候你可以这样操作：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># 查看当前分支的状态</span>
+git status
+<span style=color:#75715e># 如果什么改动都没有，那么会显示</span>
+➜  learn.php.xbcme git:<span style=color:#f92672>(</span>feature-geekwho<span style=color:#f92672>)</span> git st
+位于分支 master
+无文件要提交，干净的工作区
+<span style=color:#75715e># 没有改动，直接进行切换即可</span>
+git checkout feature-1.0.0
+</code></pre></div><p>但大部分情况，我们会遇到这种情况：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>➜  learn.php.xbcme git:<span style=color:#f92672>(</span>feature-geekwho<span style=color:#f92672>)</span> ✗ git st
+位于分支 master
+您的分支与上游分支 <span style=color:#e6db74>&#39;origin/feature-geekwho&#39;</span> 一致。
+
+未跟踪的文件:
+  （使用 <span style=color:#e6db74>&#34;git add &lt;文件&gt;...&#34;</span> 以包含要提交的内容）
+  README.md
+
+提交为空，但是存在尚未跟踪的文件（使用 <span style=color:#e6db74>&#34;git add&#34;</span> 建立跟踪）
+</code></pre></div><p>这时，你有2个选择：</p><ol><li>把当前的改动进行提交,然后切换到分支feature-1.0.0</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>git add README.md
+git commit -m <span style=color:#e6db74>&#34;* commit log&#34;</span>
+git checkout feature-1.0.0
+</code></pre></div><ol start=2><li>利用git stash命令暂存你的改动</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># stash 可以暂存多个改动</span>
+➜  learn.php.xbcme git:<span style=color:#f92672>(</span>feature-geekwho<span style=color:#f92672>)</span> ✗ git stash
+保存工作目录和索引状态 WIP on feature-geekwho: c02bf01 * 一些改动
+git checkout feature-1.0.0
+<span style=color:#75715e># 做了一些操作，想要找回自己的修改</span>
+git checkout feature-geekwho
+<span style=color:#75715e># 查看暂存列表</span>
+git stash list
+
+stash@<span style=color:#f92672>{</span>0<span style=color:#f92672>}</span>: WIP on feature-geekwho: c02bf01 * 一些改动
+<span style=color:#75715e># 由于stash是由栈实现，直接&#34;弹出&#34;修改</span>
+git stash pop
+➜  learn.php.xbcme git:<span style=color:#f92672>(</span>feature-geekwho<span style=color:#f92672>)</span> git stash pop
+位于分支 learn.php.xbcme
+尚未暂存以备提交的变更：
+  （使用 <span style=color:#e6db74>&#34;git add &lt;文件&gt;...&#34;</span> 更新要提交的内容）
+  （使用 <span style=color:#e6db74>&#34;git restore &lt;文件&gt;...&#34;</span> 丢弃工作区的改动）
+  修改：     README.md
+
+修改尚未加入提交（使用 <span style=color:#e6db74>&#34;git add&#34;</span> 和/或 <span style=color:#e6db74>&#34;git commit -a&#34;</span>）
+丢弃了 refs/stash@<span style=color:#f92672>{</span>0<span style=color:#f92672>}</span>（7c35b45658e3c20586d6cf8c526f919e106fbf5d）
+<span style=color:#75715e># 看下，你的代码是不是又回来了？</span>
+</code></pre></div><h4 id=合并分支代码>合并分支代码</h4><p>你有2个方式可以合并分支feature-1.0.0的代码：</p><ol><li>使用git merge方式合并feature-1.0.0的更新到个人开发分支 feature-geekwho</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># 切换到版本分支</span>
+git checkout feature-1.0.0
+<span style=color:#75715e># 拉取远端分支的更新</span>
+git pull --rebase origin feature-1.0.0
+<span style=color:#75715e># 切换到自己的开发分支</span>
+git checkout feature-geekwho
+<span style=color:#75715e># 在feature-1.0.0的基础上进行合并</span>
+git merge feature-1.0.0
+
+Merge made by the <span style=color:#e6db74>&#39;recursive&#39;</span> strategy.
+index.html |    <span style=color:#ae81ff>1</span> +
+<span style=color:#ae81ff>1</span> file changed, <span style=color:#ae81ff>1</span> insertion<span style=color:#f92672>(</span>+<span style=color:#f92672>)</span>
+<span style=color:#75715e># 出现上面的提示，代表合并成功，并生成一个新提交标识。</span>
+</code></pre></div><ol start=2><li>你还可以使用git rebase 减少这个新提交标识，就像你是在feature-1.0.0上进行提交一样。</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># 切换到版本分支</span>
+git checkout feature-1.0.0
+<span style=color:#75715e># 拉取远端分支的更新</span>
+git pull --rebase origin feature-1.0.0
+<span style=color:#75715e># 切换到自己的开发分支</span>
+git checkout feature-geekwho
+<span style=color:#75715e># 在feature-1.0.0的基础上进行rebase</span>
+git rebase feature-1.0.0
+First, rewinding head to replay your work on top of it...
+Applying: 一些提交
+</code></pre></div><p>变基与合并最大的区别：合并会生成一个新的提交标识，而变基就像你在feature-1.0.0进行一系列提交，没有生成新的提交标识。官方文档有<a href=https://git-scm.com/book/zh/v2/Git-%E5%88%86%E6%94%AF-%E5%8F%98%E5%9F%BA>很好的图例</a>解释这两个命令的异同。</p><h4 id=整理提交>整理提交</h4><p>在开发中，可能会有很多个提交，很多时候，这些提交都是临时无意义的，所以我们需要整理自己的提交，像下面这类：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e># git log 查看提交</span>
+
+* 调试功能a x7 commitid7 author1 2019-06-15 17:00:07
+* 调试功能a x6 commitid6 author1 2019-06-15 17:00:06
+* 调试功能a x5 commitid5 author1 2019-06-15 17:00:07
+* 调试功能a x4 commitid4 author1 2019-06-15 17:00:06
+* 调试功能a x3 commitid3 author1 2019-06-15 17:00:07
+* 调试功能a x2 commitid2 author1 2019-06-15 17:00:06
+* 添加功能a    commitid1 author1 2019-06-15 17:00:07
+<span style=color:#75715e># 切换到开发分支</span>
+git checkout feature-geekwho
+<span style=color:#75715e># 重置到commitid1这次的提交</span>
+git reset commitid1
+<span style=color:#75715e># 重新添加文件</span>
+git add .
+<span style=color:#75715e># 再次commit，并改写当前的提交</span>
+git commit -m <span style=color:#e6db74>&#34;+ 添加功能a,完成测试,参考下面的注释模板&#34;</span> --amend
+<span style=color:#75715e># 这样你就得到一个经过整理的提交了</span>
+* + 添加功能a,完成测试,参考下面的注释模板    commitid1 author1 2019-06-15 17:00:00
+<span style=color:#75715e># 加--amend参数作用是改写commitid1的提交</span>
+<span style=color:#75715e># 如果直接git commit -m &#34;+ 添加功能a,完成测试,参考下面的注释模板&#34;，你会得到2个提交</span>
+* + 添加功能a,完成测试,参考下面的注释模板    commitid2 author1 2019-06-15 18:00:00
+* 添加功能a    commitid1 author1 2019-06-15 17:00:07
+<span style=color:#75715e># 直接推送到远端分支</span>
+git push -f origin feature-geekwho
+</code></pre></div><h3 id=总结>总结</h3><p>文章总结了在日常开发过程经常会遇到的场景，整理相关Git命令，方便遇到问题对号入座，找到最终的解决方案。如果想要熟练运用Git的话，还是需要花费时间去阅读官方的文档，学习Git的命令相关原理，这样才能有效提升开发效率。</p><h3 id=参考链接>参考链接</h3><ol><li><a href=https://git-scm.com/book/zh/v2>Git 官方文档</a></li><li><a href=https://backlog.com/git-tutorial/tw/>连猴子都能懂的Git入门指南</a></li><li><a href=https://progit.bootcss.com/>Pro Git</a></li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=/></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/build-master-slave-mysql-service/>搭建主从MySQL服务</a></li><li class=widget__item><a class=widget__link href=/git-command-line-development-guide/>Git命令行开发指南</a></li><li class=widget__item><a class=widget__link href=/php-short-syntax-and-operator/>PHP的简化运算符</a></li><li class=widget__item><a class=widget__link href=/rd-environment/>研发环境那些事</a></li><li class=widget__item><a class=widget__link href=/php-autoload/>PHP自动加载</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>
