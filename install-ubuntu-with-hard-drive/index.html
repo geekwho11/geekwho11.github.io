@@ -3,8 +3,8 @@
 find -set-root <span style=color:#f92672>(</span>hd0,4<span style=color:#f92672>)</span>/casper/vmlinuz
 kernel <span style=color:#f92672>(</span>hd0,4<span style=color:#f92672>)</span>/casper/vmlinuz boot<span style=color:#f92672>=</span>casper splash
 initrd <span style=color:#f92672>(</span>hd0,4<span style=color:#f92672>)</span>/casper/initrd.gz
-</code></pre></div><p>具体的是这个 我的menu.list：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>default 2
-timeout 5
+</code></pre></div><p>具体的是这个 我的menu.list：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>default <span style=color:#ae81ff>2</span>
+timeout <span style=color:#ae81ff>5</span>
 fontfile /boot/load/fonts.gz
 splashimage /boot/load/deepin.xpm.gz
 
@@ -48,7 +48,7 @@ initrd <span style=color:#f92672>(</span>hd0,4<span style=color:#f92672>)</span>
 clear
 
 title 从第二硬盘启动系统
-fallback 6
+fallback <span style=color:#ae81ff>6</span>
 root <span style=color:#f92672>(</span>hd0,1<span style=color:#f92672>)</span>
 chainloader +1
 
@@ -82,8 +82,8 @@ title 启动Ubuntu-8.04-beta
 root <span style=color:#f92672>(</span>hd0,7<span style=color:#f92672>)</span>
 kernel /boot/vmlinuz-2.6.24-12-generic root<span style=color:#f92672>=</span>UUID<span style=color:#f92672>=</span>98c816ac-0707-4836-9d19-68983f881007 ro quiet splash
 initrd /boot/initrd.img-2.6.24-12-generic
-</code></pre></div><p>按照一定的格式复制到你C盘下的menu.list中</p><p>添加好!</p><p>重启，进入，一键还原!选项，找到启动ubuntu选择，OK，可以进入!</p><p>最后总结:</p><p>优点:不覆盖你的C盘已经有的menu.list和grldr 适用于Ghost版的XP(一般都有一键还原，呵呵)</p><p>缺点:需要进入一键还原(有点麻烦)</p><p>还有个最大缺点，那就是重装系统，无法引导ubuntu了，所以，我强烈要求，使用这个方法，一定要备份好menu.list</p><p>最后show 下我的menu.list</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>default 2
-timeout 5
+</code></pre></div><p>按照一定的格式复制到你C盘下的menu.list中</p><p>添加好!</p><p>重启，进入，一键还原!选项，找到启动ubuntu选择，OK，可以进入!</p><p>最后总结:</p><p>优点:不覆盖你的C盘已经有的menu.list和grldr 适用于Ghost版的XP(一般都有一键还原，呵呵)</p><p>缺点:需要进入一键还原(有点麻烦)</p><p>还有个最大缺点，那就是重装系统，无法引导ubuntu了，所以，我强烈要求，使用这个方法，一定要备份好menu.list</p><p>最后show 下我的menu.list</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>default <span style=color:#ae81ff>2</span>
+timeout <span style=color:#ae81ff>5</span>
 fontfile /boot/load/fonts.gz
 splashimage /boot/load/deepin.xpm.gz
 
@@ -148,7 +148,7 @@ quiet
 clear
 
 title 从第二硬盘启动系统
-fallback 6
+fallback <span style=color:#ae81ff>6</span>
 root <span style=color:#f92672>(</span>hd0,1<span style=color:#f92672>)</span>
 chainloader +1
 

@@ -8,9 +8,9 @@ DataType data;<span style=color:#75715e>//数据类型
 </span><span style=color:#75715e></span>}DListNode;
 <span style=color:#66d9ef>typedef</span> DListNode <span style=color:#f92672>*</span>DLinkList;
 DLinkList head;
-</code></pre></div><p>双链表的删除、插入操作：</p><p>由于双链表的对称性，在双链表能能方便地完成各种插入、删除操作。（源代码参考了<a href=http://blog.csdn.net/tanlingyun/archive/2007/04/25/1584087.aspx>这位同学</a>）</p><p>VS2008编译 运行通过</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;stdio.h&gt;</span><span style=color:#75715e>
-</span><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;malloc.h&gt;</span><span style=color:#75715e>
-</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;</span><span style=color:#75715e>
+</code></pre></div><p>双链表的删除、插入操作：</p><p>由于双链表的对称性，在双链表能能方便地完成各种插入、删除操作。（源代码参考了<a href=http://blog.csdn.net/tanlingyun/archive/2007/04/25/1584087.aspx>这位同学</a>）</p><p>VS2008编译 运行通过</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;stdio.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span><span style=color:#75715e>&lt;malloc.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;</span><span style=color:#75715e>
 </span><span style=color:#75715e></span><span style=color:#66d9ef>typedef</span> <span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>node</span> <span style=color:#75715e>//定义双链表
 </span><span style=color:#75715e></span>{
 <span style=color:#66d9ef>int</span> data;

@@ -16,10 +16,10 @@ LinkList head;//头指针
 </code></pre><p>tip：
 ①LinkList和ListNode *是不同名字的同一个指针类型（命名的不同是为了概念上更明确）
 ②LinkList类型的指针变量head表示它是单链表的头指针
-③ListNode *类型的指针变量p表示它是指向某一结点的指针</p><p>下面是单链表主要操作：初始化操作，查找、插入、删除操作</p><p>程序参考了<a href="http://books.google.com/books?id=-urb8WSIJvsC&pg=PA309&hl=zh-CN&rview=1&source=gbs_toc_r&cad=0_0#PPA310,M1">这里</a> <a href=http://www.hiahia.org/datastructure/xianxingbiao/xianxingbiao2.3.1.1.htm>这里</a></p><p>VS2008编译 运行通过</p><p>源代码 如下：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;conio.h&gt;//控制台输入输出Console Input/Output</span><span style=color:#75715e>
-</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdio.h&gt;//标准输入输出头文件 standard input/output</span><span style=color:#75715e>
-</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;malloc.h&gt;</span><span style=color:#75715e>
-</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;//动态存储函数头文件</span><span style=color:#75715e>
+③ListNode *类型的指针变量p表示它是指向某一结点的指针</p><p>下面是单链表主要操作：初始化操作，查找、插入、删除操作</p><p>程序参考了<a href="http://books.google.com/books?id=-urb8WSIJvsC&pg=PA309&hl=zh-CN&rview=1&source=gbs_toc_r&cad=0_0#PPA310,M1">这里</a> <a href=http://www.hiahia.org/datastructure/xianxingbiao/xianxingbiao2.3.1.1.htm>这里</a></p><p>VS2008编译 运行通过</p><p>源代码 如下：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-cpp data-lang=cpp><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;conio.h&gt;//控制台输入输出Console Input/Output</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdio.h&gt;//标准输入输出头文件 standard input/output</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;malloc.h&gt;</span><span style=color:#75715e>
+</span><span style=color:#75715e>#include</span> <span style=color:#75715e>&lt;stdlib.h&gt;//动态存储函数头文件</span><span style=color:#75715e>
 </span><span style=color:#75715e></span>
 <span style=color:#75715e>#define ERROR 0
 </span><span style=color:#75715e>#define OK 1
