@@ -1,0 +1,109 @@
+<!doctype html><html class=no-js lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Hugo部署方案 - 神秘极客</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/css/style.css><link rel="shortcut icon" href=/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class=container><div class=logo><a class=logo__link href=/ title=神秘极客 rel=home><div class=logo__title>神秘极客</div><div class=logo__tagline>学习编程之美</div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>菜单</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/archives/><i class="fa fa-road"></i><span class=menu__text>学编程</span></a></li><li class=menu__item><a class=menu__link href=/about/><i class="fa fa-heart"></i><span class=menu__text>关于我</span></a></li><li class=menu__item><a class=menu__link href=/donate/><i class="fa fa-heart"></i><span class=menu__text>捐赠</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Hugo部署方案</h1></header><div class="post__toc toc"><div class=toc__title>目录</div><div class=toc__menu><nav id=TableOfContents><ul><li><a href=#前言>前言</a><ul><li><a href=#静态生成>静态生成</a></li><li><a href=#github-pages类型>GitHub Pages类型</a></li><li><a href=#目录结构>目录结构</a></li><li><a href=#工作流程>工作流程</a></li><li><a href=#注意事项>注意事项</a></li><li><a href=#参考链接>参考链接</a></li></ul></li></ul></nav></div></div><div class="content post__content clearfix"><h2 id=前言>前言</h2><p>本文介绍如何部署Hugo静态站点到Github Pages。</p><h3 id=静态生成>静态生成</h3><p>在尝试Hugo、Hexo、Jekyll等静态生成器后，发现这些生成器在本质上是将你的markdown文件转为Html、Css、JavaScript。</p><p>在本地预览的时候，可以通过Hugo Server进行实时预览，甚至Hugo还会监控文件的改动，以便自动重建站点，实时刷新文章的内容。但最终你需要将这些文件部署到服务器上，其他人才能正常访问。</p><p>hugo官方提供了手动部署脚本，可以实现一键部署到GitHub Pages。由于我的GitHub Pages采用了私有版本库+项目页面+自定义域名实现的，所以对部署脚本进行一定优化修改。</p><h3 id=github-pages类型>GitHub Pages类型</h3><p>这里简单介绍下GitHub Pages支持的类型：用户/组织、项目。规则如下：</p><table><thead><tr><th>版本库(repository)</th><th>对应域名</th></tr></thead><tbody><tr><td><code>&lt;username>/&lt;username>.github.io</code></td><td><code>http(s)://&lt;username>.github.io</code></td></tr><tr><td><code>&lt;organization>.github.io</code></td><td><code>http(s)://&lt;organization>.github.io</code></td></tr><tr><td><code>&lt;username>/&lt;repository></code></td><td><code>http(s)://&lt;user>.github.io/&lt;repository></code></td></tr></tbody></table><p>其主要的区别在于，需要建立的版本库以及对应访问域名不同。GitHub Pages会根据用户建立的版本库，自动关联并解析到对应的域名。
+GitHub Pages的顶级域名的DNS设置：</p><table><thead><tr><th>类型</th><th>名称</th><th>值</th></tr></thead><tbody><tr><td>A</td><td>@</td><td>185.199.108.153</td></tr><tr><td>CNAME</td><td>www</td><td>geekwho11.github.io</td></tr><tr><td>A</td><td>@</td><td>185.199.109.153、185.199.110.153、185.199.111.153</td></tr></tbody></table><p>因为GitHub Pages需要解析的IP地址有4个，最后一条A记录，可以根据情况进行设置。</p><p>我是通过2个独立的版本库里隔离了草稿箱和已完成的文章。</p><p>你不想你还没写完的文章，就公开发布了吧。</p><p>具体方案如下：</p><ol><li>xbc.me版本库用于更新发布文章，存储已完成的文章。</li><li>write版本库属于私有，相当于你自己的文章草稿箱。</li><li>在write版本写文章，提交发布后触发GitHub Action，自动更新到xbc.me版本</li></ol><table><thead><tr><th>版本库(repository)</th><th>对应域名</th><th>备注</th></tr></thead><tbody><tr><td>xbc.me</td><td><a href=https://xbc.me>https://xbc.me</a></td><td>Project Pages Sites/公开</td></tr><tr><td>write</td><td>&ndash;</td><td>私有</td></tr></tbody></table><h3 id=目录结构>目录结构</h3><p>假设你有一个私有版本库write，构建的内容将会生成到public文件夹，其目录结构如下：</p><pre><code>➜  write git:(master) ✗ tree -L 1
+.
+├── archetypes
+├── config.toml
+├── content
+├── deploy.sh
+├── layouts
+├── public
+├── README.md
+├── resources
+├── static
+└── themes
+    └── mainroad
+
+7 directories, 3 files
+</code></pre><p>其中文件夹public以及theme/mainloan，是通过下面命令添加的子模块：</p><pre><code>git submodule add git@github.com:geekwho11/xbc.me.git public
+git submodule add git@github.com:geekwho11/mainroad.git themes/mainload
+</code></pre><p>最终你的.gitmodules的内容如下：</p><pre><code>[submodule &quot;themes/mainroad&quot;]
+	path = themes/mainroad
+	url = git@github.com:geekwho11/mainroad.git
+[submodule &quot;public&quot;]
+	path = public
+	url = git@github.com:geekwho11/xbc.me.git
+	branch = master
+</code></pre><p>你可以使用官方推荐的部署脚本，部署文件到GitHub Pages。</p><p>为了实现简单，部署脚本直接push到master分支，故需要在通过master分支，这需要你在设置为master。</p><p>这里我尝试建立deploy.sh，参考原文<a href=https://gohugo.io/hosting-and-deployment/hosting-on-github/>Host on GitHub</a> 进行修改，建立deploy.sh文件，内容如下：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e>#!/bin/bash
+</span><span style=color:#75715e></span><span style=color:#75715e># Program:</span>
+<span style=color:#75715e>#   发布Hugo生成文件到GitHub Pages</span>
+<span style=color:#75715e># History:</span>
+<span style=color:#75715e># 2020.05.05 GeekWho First release.</span>
+<span style=color:#75715e># If a command fails then the deploy stops</span>
+set -e
+
+printf <span style=color:#e6db74>&#34;\033[0;32mDeploying updates to GitHub...\033[0m\n&#34;</span>
+
+<span style=color:#75715e># Build the project.</span>
+Hugo --minify <span style=color:#75715e># if using a theme, replace with `Hugo -t &lt;YOURTHEME&gt;`</span>
+
+<span style=color:#75715e># Go To Public folder</span>
+cd public
+
+<span style=color:#75715e># Add changes to git.</span>
+git add .
+
+<span style=color:#75715e># Commit changes.</span>
+msg<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;Published on </span><span style=color:#66d9ef>$(</span>date +<span style=color:#e6db74>&#39;%Y-%m-%d %H:%M:%S&#39;</span><span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span>
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> -n <span style=color:#e6db74>&#34;</span>$*<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+    msg<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$*<span style=color:#e6db74>&#34;</span>
+<span style=color:#66d9ef>fi</span>
+git commit -m <span style=color:#e6db74>&#34;</span>$msg<span style=color:#e6db74>&#34;</span>
+
+git pull --rebase origin master
+<span style=color:#75715e># Push source and build repos.</span>
+git push -f origin master
+</code></pre></div><p>通过master分支，这需要你在版本库的settings的GitHub Pages，设置<strong>Source</strong>为master。</p><p>如果你希望用官方推荐的gh-pages分支发布的话，建议使用下面的deploy.sh脚本。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell><span style=color:#75715e>#!/bin/bash
+</span><span style=color:#75715e></span><span style=color:#75715e># Program:</span>
+<span style=color:#75715e>#   发布hugo生成文件到GitHub Pages</span>
+<span style=color:#75715e># History:</span>
+<span style=color:#75715e># 2020.05.05 GeekWho First release.</span>
+<span style=color:#75715e># If a command fails then the deploy stops</span>
+set -e
+
+printf <span style=color:#e6db74>&#34;\033[0;32mDeploying updates to GitHub...\033[0m\n&#34;</span>
+
+<span style=color:#75715e># Build the project.</span>
+hugo --minify <span style=color:#75715e># if using a theme, replace with `hugo -t &lt;YOURTHEME&gt;`</span>
+
+<span style=color:#75715e># Go To Public folder</span>
+cd public
+
+<span style=color:#75715e># 切换到gh-pages</span>
+git checkout gh-pages
+
+<span style=color:#75715e># Add changes to git.</span>
+git add .
+
+<span style=color:#75715e># Commit changes.</span>
+msg<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;Published on </span><span style=color:#66d9ef>$(</span>date +<span style=color:#e6db74>&#39;%Y-%m-%d %H:%M:%S&#39;</span><span style=color:#66d9ef>)</span><span style=color:#e6db74>&#34;</span>
+<span style=color:#66d9ef>if</span> <span style=color:#f92672>[</span> -n <span style=color:#e6db74>&#34;</span>$*<span style=color:#e6db74>&#34;</span> <span style=color:#f92672>]</span>; <span style=color:#66d9ef>then</span>
+    msg<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;</span>$*<span style=color:#e6db74>&#34;</span>
+<span style=color:#66d9ef>fi</span>
+git commit -m <span style=color:#e6db74>&#34;</span>$msg<span style=color:#e6db74>&#34;</span>
+
+git pull --rebase origin gh-pages
+<span style=color:#75715e># Push source and build repos.</span>
+git push -f origin gh-pages
+</code></pre></div><h3 id=工作流程>工作流程</h3><p>这样你的工作流程就变成了下面的步骤：</p><ol><li>提交版本库代码</li><li>执行deploy.sh脚本</li><li>访问对应的Pages页面是否发布成功</li></ol><p>当你在当前版本库修改完md文件后，你可以通过执行deploy.sh脚本实现自动同步到GitHub Pages。</p><h3 id=注意事项>注意事项</h3><p>注意，如果你不想要渲染部分未完成的草稿，你可以用下面任意一种方式避免被同步。</p><p>第一种，在Front Matter设置draft: true，标识为草稿，Hugo默认不会进行渲染。</p><p>另外一种方式，直接设置config.toml配置，忽略指定文件夹。</p><pre><code># 忽略当前文件夹draft下全部文件
+ignorefiles = [ &quot;draft/.*&quot; ]
+</code></pre><p>当然，GitHub Pages使用肯定会有一些限制的。</p><ul><li>磁盘空间限制为1GB。这意味着发布的站点全部文件大小不能超过1GB。</li><li>每月限制100GB的带宽，可调整。</li><li>每小时可构建10次，可调整。</li></ul><p>你可以从这里查看<a href=https://help.github.com/en/github/working-with-github-pages/about-github-pages#usage-limits>更多的限制</a>。</p><h3 id=参考链接>参考链接</h3><ol><li><a href=https://gohugo.io/hosting-and-deployment/hosting-on-github/>Host on GitHub</a></li><li><a href=https://help.github.com/en/github/working-with-github-pages/about-github-pages>About GitHub Pages</a></li><li><a href=https://help.github.com/en/github/working-with-github-pages/about-custom-domains-and-github-pages>About custom domains and GitHub Pages</a></li></ol></div><footer class=post__footer><div class="post__tags tags clearfix"><svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5.0 11V3C0 1.5.8.8.8.8S1.5.0 3 0h8c1.5.0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 100-6 3 3 0 000 6z"/></svg><ul class=tags__list><li class=tags__item><a class="tags__link btn" href=/tags/githubpages/ rel=tag>GithubPages</a></li></ul></div></footer></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="GeekWho avatar" src=/images/avatar.jpeg class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>关于 GeekWho</span></div><div class=authorbox__description>PHP and Go are the best language in the world.</div></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script>const gitalk=new Gitalk({clientID:'13b47a49e0f947bf69e0',clientSecret:'a4f2f9622955ed3993f37d1b82eddab12abdeffe',repo:'xbc.me',owner:'geekwho11',admin:['geekwho11'],id:location.pathname,distractionFreeMode:false});(function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById('gitalk-container').innerHTML='Gitalk comments not available by default when the website is previewed locally.';return;}
+gitalk.render('gitalk-container');})();</script></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=搜索... name=q aria-label=搜索...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://xbc.me></form></div><div class="widget-recent widget"><h4 class=widget__title>近期文章</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/hugo-deploy/>Hugo部署方案</a></li><li class=widget__item><a class=widget__link href=/add-gittalk-to-hugo/>为hugo添加gittalk组件</a></li><li class=widget__item><a class=widget__link href=/how-to-create-an-archives-page-with-hugo/>为hugo添加归档页面</a></li><li class=widget__item><a class=widget__link href=/hello-hugo-and-goodbye-wordpress/>你好Hugo，再见WordPress</a></li><li class=widget__item><a class=widget__link href=/build-master-slave-mysql-service/>搭建主从MySQL服务</a></li></ul></div></div><div class="widget-categories widget"><h4 class=widget__title>分类</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/categories/%E5%AD%A6%E7%BC%96%E7%A8%8B/>学编程</a></li><li class=widget__item><a class=widget__link href=/categories/%E7%A5%9E%E7%A7%98%E6%9E%81%E5%AE%A2/>神秘极客</a></li><li class=widget__item><a class=widget__link href=/categories/%E9%9A%8F%E7%AC%94/>随笔</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>标签</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/tags/githubpages/ title=GithubPages>GithubPages</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/go/ title=Go>Go</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/javascript/ title=JavaScript>JavaScript</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/linux/ title=Linux>Linux</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/magento/ title=Magento>Magento</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/mysql/ title=MySQL>MySQL</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/nginx/ title=Nginx>Nginx</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/php/ title=PHP>PHP</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/ubuntu/ title=Ubuntu>Ubuntu</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/unittest/ title=UnitTest>UnitTest</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/wordpress/ title=WordPress>WordPress</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%89%8D%E7%AB%AF/ title=前端>前端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%90%8E%E7%AB%AF/ title=后端>后端</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95/ title=常见算法>常见算法</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/ title=年终总结>年终总结</a>
+<a class="widget-taglist__link widget__link btn" href=/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=数据结构>数据结构</a></div></div><div class="widget-social widget"><h4 class="widget-social__title widget__title">社交</h4><div class="widget-social__content widget__content"><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=GitHub rel="noopener noreferrer" href=https://github.com/geekwho11 target=_blank><svg class="widget-social__link-icon icon icon-github" width="24" height="24" viewBox="0 0 384 374"><path d="m192 0C85.9.0.0 85.8.0 191.7c0 84.7 55 156.6 131.3 181.9 9.6 1.8 13.1-4.2 13.1-9.2.0-4.6-.2-16.6-.3-32.6-53.4 11.6-64.7-25.7-64.7-25.7-8.7-22.1-21.3-28-21.3-28-17.4-11.9 1.3-11.6 1.3-11.6 19.3 1.4 29.4 19.8 29.4 19.8 17.1 29.3 44.9 20.8 55.9 15.9 1.7-12.4 6.7-20.8 12.2-25.6-42.6-4.8-87.5-21.3-87.5-94.8.0-20.9 7.5-38 19.8-51.4-2-4.9-8.6-24.3 1.9-50.7.0.0 16.1-5.2 52.8 19.7 15.3-4.2 31.7-6.4 48.1-6.5 16.3.1 32.7 2.2 48.1 6.5 36.7-24.8 52.8-19.7 52.8-19.7 10.5 26.4 3.9 45.9 1.9 50.7 12.3 13.4 19.7 30.5 19.7 51.4.0 73.7-44.9 89.9-87.7 94.6 6.9 5.9 13 17.6 13 35.5.0 25.6-.2 46.3-.2 52.6.0 5.1 3.5 11.1 13.2 9.2 76.2-25.5 131.2-97.3 131.2-182 0-105.9-86-191.7-192-191.7z"/></svg><span>GitHub</span></a></div><div class="widget-social__item widget__item"><a class="widget-social__link widget__link btn" title=Email href=mailto:geekwho@xbc.me><svg class="widget-social__link-icon icon icon-mail" width="24" height="24" viewBox="0 0 416 288"><path d="m0 16v256 16h16 384 16v-16V16 0h-16H16 0zm347 16-139 92.5L69 32zM199 157.5l9 5.5 9-5.5L384 46v210H32V46z"/></svg><span>geekwho@xbc.me</span></a></div></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 神秘极客.
+<span class=footer__copyright-credits>基于 <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> 引擎和 <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a>主題</span></div></div></footer></div><script async defer src=/js/menu.js></script></body></html>
